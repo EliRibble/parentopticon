@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+import parentopticon.ui
+
+def main():
+	parentopticon.ui.show_alert(
+		"Test alert.",
+		"Just showing that we can in fact show alert messages.")
+
+if __name__ == "__main__":
+	main()

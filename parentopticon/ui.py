@@ -1,4 +1,5 @@
 import os
+import subprocess
 import tkinter as tk
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
@@ -29,7 +30,12 @@ class NoApplication(tk.Frame):
 		self.ack_button = tk.Button(self, text="Awwww.", command=self.master.destroy)
 		self.ack_button.pack(side="bottom")
 		
-		
+
+def show_alert(title: str, content: str) -> None:
+	"""Show an alert message using the desktop notifier."""
+	subprocess.call(["notify-send", title, content])
+
+
 def show_denied(program_name: str, reason: str) -> None:
 	"""Tell the user they can't open their program."""
 	root = tk.Tk(className="parentopticon")
