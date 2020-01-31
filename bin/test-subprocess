@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+import sys
+import time
+
+if len(sys.argv) > 1:
+	print("Hey. I'm walkin' here with {}".format(" ".join(sys.argv[1:])))
+else:
+	print("Hey. I'm walkin' here. Solo")
+time.sleep(10)
+print("Yo. I'm done.")
