@@ -2,7 +2,7 @@
 import parentopticon.ui
 
 def main():
-	parentopticon.ui.show_denied("this")
+	parentopticon.ui.show_denied("Minecraft", "it's banned for life!")
 
 if __name__ == "__main__":
 	main()
