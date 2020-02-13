@@ -15,6 +15,7 @@ setuptools.setup(
 	packages=setuptools.find_packages(),
 	install_requires = [
 		"psutil==5.6.3",
+		"sanic==19.12.2",
 	],
 	classifiers=[
 		"Programming Language :: Python :: 3",
