@@ -1,0 +1,25 @@
+<html>
+<header>
+  <title>Parentopticon - Window {{window.name}}</title>
+</header>
+<body>
+<h1>Window '{{window.name}}'</h1>
+<form action="/window/{{window.id}}" method="PUT">
+  <label for="name">Name:</label>
+  <input type="text" name="name" value="{{window.name}}"/>
+  <label for="monday">Monday:</label>
+  <input type="text" name="monday" value="{{window.monday.value}}"/>
+  <label for="tuesday">Tuesday:</label>
+  <input type="text" name="tuesday" value="{{window.tuesday.value}}"/>
+  <label for="wednesday">Wednesday:</label>
+  <input type="text" name="wednesday" value="{{window.wednesday.value}}"/>
+  <label for="thursday">Thursday:</label>
+  <input type="text" name="thursday" value="{{window.thursday.value}}"/>
+  <label for="friday">Friday:</label>
+  <input type="text" name="friday" value="{{window.friday.value}}"/>
+  <label for="saturday">Saturday:</label>
+  <input type="text" name="saturday" value="{{window.saturday.value}}"/>
+  <label for="sunday">Sunday:</label>
+  <input type="text" name="sunday" value="{{window.sunday.value}}"/>
+</body>
+</html>
