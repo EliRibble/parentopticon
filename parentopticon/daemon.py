@@ -9,6 +9,8 @@ import time
 from parentopticon import db, log, restrictions, snapshot
 from parentopticon.webserver import app
 
+import jinja2
+
 async def _snapshot_loop(stop_event: asyncio.Event) -> None:
 	"""Perform the regular snapsots of what's running."""
 	logging.info("Started loop to take snapshots.")
@@ -28,6 +30,10 @@ async def on_server_start(app, loop) -> None:
 	app.db_connection.connect()
 	app.stop_event = asyncio.Event()
 	app.snapshot_task = loop.create_task(_snapshot_loop(app.stop_event))
+	app.jinja_env = jinja2.Environment(
+		loader=jinja2.PackageLoader("parentopticon", "templates"),
+		autoescape=jinja2.select_autoescape(["html", "xml"]),
+	)
 
 @app.listener("before_server_stop")
 async def on_server_stop(app, loop) -> None:

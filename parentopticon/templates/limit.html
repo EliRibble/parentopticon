@@ -1,0 +1,18 @@
+<html>
+<header>
+  <title>Parentopticon - Limit {{limit.name}}</title>
+</header>
+<body>
+<h1>Limit '{{limit.name}}'</h1>
+<form action="/limit/{{limit.id}}" method="PUT">
+  <label for="name">Name:</label>
+  <input type="text" name="name" value="{{limit.name}}"/>
+  <label for="daily">Daily:</label>
+  <input type="number" min="0" max="24" name="daily" value="{{limit.daily}}"/>
+  <label for="wekly">Weekly:</label>
+  <input type="number" min="0" max="168" name="weekly" value="{{limit.weekly}}"/>
+  <label for="monthly">Monthly:</label>
+  <input type="number" min="0" max="744" name="monthly" value="{{limit.monthly}}"/>
+  <input type="submit" value="Update"/>
+</body>
+</html>
