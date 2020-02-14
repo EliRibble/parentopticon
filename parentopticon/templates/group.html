@@ -1,0 +1,14 @@
+<html>
+<header>
+  <title>Parentopticon - Group {{group.name}}</title>
+</header>
+<body>
+<h1>Group '{{group.name}}'</h1>
+<form action="/group/{{group.id}}" method="PUT">
+  <label for="name">Name:</label>
+  <input type="text" name="name" value="{{group.name}}"/>
+  <label for="limit">Limit: <a href="/limit/{{ group.limit.id }}">{{ group.limit.name }}</a></label>
+  <label for="window_week">Window: <a href="/window/{{ group.window_week.id }}">{{ group.window_week.name }}</a></label>
+  <input type="submit" value="Update"/>
+</body>
+</html>

@@ -16,8 +16,10 @@ def _render(template: str, **kwargs):
 async def root(request):
 	limits = app.db_connection.limit_list()
 	window_weeks = app.db_connection.window_week_list()
+	groups = app.db_connection.group_list()
 	programs = [] #app.db_connection.programs_list()
 	return _render("index.html",
+		groups=list(groups),
 		limits=list(limits),
 		programs=programs,
 		window_weeks=list(window_weeks),
@@ -38,6 +40,11 @@ async def group_post(request):
 	)
 	return redirect("/group/{}".format(group_id))
 
+
+@app.route("/group/<group_id:int>", methods=["GET"])
+async def group_get(request, group_id: int):
+	group = app.db_connection.group_get(group_id)
+	return _render("group.html", group=group)
 
 @app.route("/limit", methods=["POST"])
 async def limit_post(request):

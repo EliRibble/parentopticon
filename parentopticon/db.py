@@ -5,6 +5,7 @@ from typing import Iterable, List, Optional
 
 LOGGER = logging.getLogger(__name__)
 
+Group = collections.namedtuple("Group", ("id", "name", "limit", "window_week"))
 Limit = collections.namedtuple("Limit", ("id", "name", "daily", "weekly", "monthly"))
 class WindowWeekDaySpan:
 	def __init__(self, id_: int, day: int, end: int, start: int, window_id: int):
@@ -80,6 +81,31 @@ class Connection:
 		self.connection.commit()
 		return self.cursor.lastrowid
 
+	def group_get(self, group_id: int) -> Group:
+		self.cursor.execute(
+			"SELECT id, name, group_limit, window_week FROM ProgramGroup WHERE id = ?", (group_id,))
+		data = self.cursor.fetchone()
+		limit = self.limit_get(data[2]) if data[2] else None
+		window_week = self.window_week_get(data[3]) if data[3] else None
+		return Group(
+			id = data[0],
+			name = data[1],
+			limit = limit,
+			window_week = window_week,
+		)
+
+	def group_list(self) -> Iterable[Group]:
+		for data in self.cursor.execute(
+			"SELECT id, name, group_limit, window_week FROM ProgramGroup"):
+			limit = self.limit_get(data[2]) if data[2] else None
+			window_week = self.window_week_get(data[3]) if data[3] else None
+			yield Group(
+				id = data[0],
+				name = data[1],
+				limit = limit,
+				window_week = window_week,
+			)
+				
 	def limit_create(self, name: str, daily: int, weekly: int, monthly: int) -> int:
 		self.cursor.execute(
 			"INSERT INTO ProgramGroupLimit (name, daily, weekly, monthly) VALUES (?, ?, ?, ?)",

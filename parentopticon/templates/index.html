@@ -63,6 +63,12 @@
 
 <h2>Groups</h2>
 {% if groups %}
+<table>
+  <tr><th>Name</th></tr>
+  {% for group in groups %}
+    <tr><td><a href="/group/{{ group.id }}">{{ group.name }}</a></td></tr>
+  {% endfor %}
+</table>
 {% else %}
 <p>None yet.</p>
 {% endif %}
@@ -71,14 +77,14 @@
   <input type="text" name="name"/>
   <label for="limits">Limits:</label>
   <select name="limit" {% if not limits %}disabled{% endif %}>
-    <option value="-1" default>None</option>
+    <option value="0" default>None</option>
     {% for limit in limits %}
 	<option value="{{ limit.id }}">{{ limit.name }}</option>
 	{% endfor %}
   </select>
   <label for="window_week">Window Week:</label>
   <select name="window_week" {% if not window_weeks %}disabled{% endif %}>
-    <option value="-1" default>None</option>
+    <option value="0" default>None</option>
     {% for window_week in window_weeks %}
 	<option value="{{ window_week.id }}">{{ window_week.name }}</option>
 	{% endfor %}
