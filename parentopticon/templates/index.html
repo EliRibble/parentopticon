@@ -30,7 +30,13 @@
 
 
 <h2>Windows</h2>
-{% if windows %}
+{% if window_weeks %}
+<table>
+  <tr><th>Name</th></tr>
+  {% for window_week in window_weeks %}
+    <tr><td><a href="/window/{{ window_week.id }}">{{ window_week.name }}</a></td></tr>
+  {% endfor %}
+</table>
 {% else %}
 <p>None yet.</p>
 {% endif %}

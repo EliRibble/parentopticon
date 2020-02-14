@@ -1,16 +1,11 @@
 import collections
 import logging
 import sqlite3
-import typing
+from typing import Iterable, List
 
 LOGGER = logging.getLogger(__name__)
 
 Limit = collections.namedtuple("Limit", ("id", "name", "daily", "weekly", "monthly"))
-WindowWeek = collections.namedtuple("Window", (
-	"id",
-	"name",
-	"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"))
-
 class WindowWeekDaySpan:
 	def __init__(self, id_: int, day: int, end: int, start: int, window_id: int):
 		self.id = id_
@@ -24,7 +19,7 @@ class WindowWeekDaySpan:
 		return "{}-{}".format(self.start, self.end)
 
 class WindowWeekDay:
-	def __init__(self, window_id: int, day: int, spans: typing.List[WindowWeekDaySpan]):
+	def __init__(self, window_id: int, day: int, spans: List[WindowWeekDaySpan]):
 		self.window_id = window_id
 		self.day = day
 		self.spans = sorted(spans, key=lambda s: s.start)
@@ -32,6 +27,40 @@ class WindowWeekDay:
 	@property
 	def value(self) -> str:
 		return ",".join(span.value for span in self.spans)
+
+class WindowWeek:
+	def __init__(self, id_: int, name: str, days: List[WindowWeekDay]):
+		self.id = id_
+		self.name = name
+		self.days = days
+
+	@property
+	def monday(self):
+		return self.days[0]
+
+	@property
+	def tuesday(self):
+		return self.days[1]
+
+	@property
+	def wednesday(self):
+		return self.days[2]
+
+	@property
+	def thursday(self):
+		return self.days[3]
+
+	@property
+	def friday(self):
+		return self.days[4]
+
+	@property
+	def saturday(self):
+		return self.days[5]
+
+	@property
+	def sunday(self):
+		return self.days[6]
 
 class Connection:
 	"Class that encapsulates all the interface to the DB."
@@ -63,15 +92,16 @@ class Connection:
 			monthly = data[4],
 		)
 
-	def limit_list(self) -> typing.List[Limit]:
-		return [Limit(
-			id = data[0],
-			name = data[1],
-			daily = data[2],
-			weekly = data[3],
-			monthly = data[4],
-		) for data in self.cursor.execute(
-			"SELECT id, name, daily, weekly, monthly FROM ProgramGroupLimit")]
+	def limit_list(self) -> Iterable[Limit]:
+		for data in self.cursor.execute(
+			"SELECT id, name, daily, weekly, monthly FROM ProgramGroupLimit"):
+			yield Limit(
+				id = data[0],
+				name = data[1],
+				daily = data[2],
+				weekly = data[3],
+				monthly = data[4],
+			)
 
 	def window_week_create(self, name: str) -> int:
 		self.cursor.execute(
@@ -81,28 +111,26 @@ class Connection:
 		return self.cursor.lastrowid
 
 	def window_week_get(self, window_id: int) -> WindowWeek:
-		monday = self.window_week_day_get(window_id, 0)
-		tuesday = self.window_week_day_get(window_id, 1)
-		wednesday = self.window_week_day_get(window_id, 2)
-		thursday = self.window_week_day_get(window_id, 3)
-		friday = self.window_week_day_get(window_id, 4)
-		saturday = self.window_week_day_get(window_id, 5)
-		sunday = self.window_week_day_get(window_id, 6)
+		days = self.window_week_day_list(window_id)
 		self.cursor.execute(
 			"SELECT id, name FROM WindowWeek WHERE id = ?", (window_id,))
 		data = self.cursor.fetchone()
 		return WindowWeek(
-			id = data[0],
+			id_ = data[0],
 			name = data[1],
-			monday = monday,
-			tuesday = tuesday,
-			wednesday = wednesday,
-			thursday = thursday,
-			friday = friday,
-			saturday = saturday,
-			sunday = sunday,
+			days = days,
 		)
 
+	def window_week_list(self) -> Iterable[WindowWeek]:
+		for data in self.cursor.execute(
+			"SELECT id, name FROM WindowWeek"):
+			days = self.window_week_day_list(data[0])
+			yield WindowWeek(
+				id_ = data[0],
+				name = data[1],
+				days = days,
+			)
+		
 	def window_week_day_span_create(self, day: int, end: int, start: int, window_id: int) -> int:
 		self.cursor.execute(
 			"INSERT INTO WindowWeekDaySpan (day, end, start, window_id) VALUES (?, ?, ?, ?)",
@@ -126,6 +154,26 @@ class Connection:
 			spans = spans,
 			window_id = window_id,
 		)
+
+	def window_week_day_list(self, window_id: int) -> List[WindowWeekDay]:
+		spans = [WindowWeekDaySpan(
+			id_ = data[0],
+			day = data[1],
+			end = data[2],
+			start = data[3],
+			window_id = data[4],
+		) for data in self.cursor.execute(
+			"SELECT id, day, end, start, window_id FROM WindowWeekDaySpan WHERE window_id = ?",
+			(window_id,),
+		)]
+		results = [WindowWeekDay(
+			day = i,
+			spans = [],
+			window_id = window_id,
+		) for i in range(7)]
+		for span in spans:
+			results[span.day].spans.append(span)
+		return results
 
 	def _create_tables(self):
 		LOGGER.info("Ensuring DB tables exist.")

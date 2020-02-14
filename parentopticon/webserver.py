@@ -15,10 +15,12 @@ def _render(template: str, **kwargs):
 @app.route("/")
 async def root(request):
 	limits = app.db_connection.limit_list()
+	window_weeks = app.db_connection.window_week_list()
 	programs = [] #app.db_connection.programs_list()
 	return _render("index.html",
 		limits=limits,
 		programs=programs,
+		window_weeks=window_weeks,
 	)
 
 
