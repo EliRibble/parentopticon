@@ -11,13 +11,15 @@ from parentopticon.webserver import app
 
 import jinja2
 
-async def _snapshot_loop(stop_event: asyncio.Event) -> None:
+
+SNAPSHOT_TIMESPAN_SECONDS = 10
+async def _snapshot_loop(stop_event: asyncio.Event, db_connection: db.Connection) -> None:
 	"""Perform the regular snapsots of what's running."""
 	logging.info("Started loop to take snapshots.")
 	while not stop_event.is_set():
-		shot = snapshot.take()
+		shot = snapshot.take(db_connection, SNAPSHOT_TIMESPAN_SECONDS)
 		try:
-			await asyncio.wait_for(stop_event.wait(), 60)
+			await asyncio.wait_for(stop_event.wait(), SNAPSHOT_TIMESPAN_SECONDS)
 		except asyncio.TimeoutError:
 			pass
 	logging.info("Snapshot loop closed")
@@ -29,7 +31,7 @@ async def on_server_start(app, loop) -> None:
 	app.db_connection = db.Connection()
 	app.db_connection.connect()
 	app.stop_event = asyncio.Event()
-	app.snapshot_task = loop.create_task(_snapshot_loop(app.stop_event))
+	app.snapshot_task = loop.create_task(_snapshot_loop(app.stop_event, app.db_connection))
 	app.jinja_env = jinja2.Environment(
 		loader=jinja2.PackageLoader("parentopticon", "templates"),
 		autoescape=jinja2.select_autoescape(["html", "xml"]),
