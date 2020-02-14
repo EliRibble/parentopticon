@@ -1,7 +1,7 @@
 import collections
 import logging
 import sqlite3
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +72,13 @@ class Connection:
 		self.connection = sqlite3.connect("/usr/share/parentopticon/db.sqlite")
 		self.cursor = self.connection.cursor()
 		self._create_tables()
+
+	def group_create(self, name: str, limit: Optional[int], window_week: Optional[int]) -> int:
+		self.cursor.execute(
+			"INSERT INTO ProgramGroup (name, group_limit, window_week) VALUES (?, ?, ?)",
+			(name, limit, window_week))
+		self.connection.commit()
+		return self.cursor.lastrowid
 
 	def limit_create(self, name: str, daily: int, weekly: int, monthly: int) -> int:
 		self.cursor.execute(
@@ -194,7 +201,8 @@ class Connection:
 			"""CREATE TABLE IF NOT EXISTS ProgramGroup (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				name TEXT NOT NULL,
-				group_limit INTEGER -- Limit FK
+				group_limit INTEGER, -- Limit FK
+				window_week INTEGER -- WindowWeek FK
 			);""")
 		self.cursor.execute(
 			"""CREATE TABLE IF NOT EXISTS UserSession (

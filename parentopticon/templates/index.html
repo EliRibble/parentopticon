@@ -70,7 +70,7 @@
   <label for="name">Name:</label>
   <input type="text" name="name"/>
   <label for="limits">Limits:</label>
-  <select name="limits" {% if not limits %}disabled{% endif %}>
+  <select name="limit" {% if not limits %}disabled{% endif %}>
     <option value="-1" default>None</option>
     {% for limit in limits %}
 	<option value="{{ limit.id }}">{{ limit.name }}</option>

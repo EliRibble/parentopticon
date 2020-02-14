@@ -24,6 +24,21 @@ async def root(request):
 	)
 
 
+@app.route("/group", methods=["POST"])
+async def group_post(request):
+	name = request.form["name"][0]
+	limit = int(request.form["limit"][0])
+	window_week = int(request.form["window_week"][0])
+	limit = None if limit == -1 else limit
+	window_week = None if window_week == -1 else window_week
+	group_id = app.db_connection.group_create(
+		name = name,
+		limit = limit,
+		window_week = window_week,
+	)
+	return redirect("/group/{}".format(group_id))
+
+
 @app.route("/limit", methods=["POST"])
 async def limit_post(request):
 	name = request.form["name"][0]
