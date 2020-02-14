@@ -108,7 +108,12 @@
   <input type="text" name="name"/>
   <label for="processes">Processes:</label>
   <input type="text" name="processes"/>
-  <input type="submit"/>
+  <select name="group" {% if not groups %}disabled{% endif %}>
+    {% for group in groups %}
+	<option value="{{ group.id }}">{{ group.name }}</option>
+	{% endfor %}
+  </select>
+  <input type="submit" {% if not groups %}disabled{% endif %}/>
 </form>
 </body>
 </html>

@@ -7,6 +7,9 @@ LOGGER = logging.getLogger(__name__)
 
 Group = collections.namedtuple("Group", ("id", "name", "limit", "window_week"))
 Limit = collections.namedtuple("Limit", ("id", "name", "daily", "weekly", "monthly"))
+Process = collections.namedtuple("Process", ("id", "name", "program_id"))
+Program = collections.namedtuple("Program", ("id", "name", "group", "processes"))
+
 class WindowWeekDaySpan:
 	def __init__(self, id_: int, day: int, end: int, start: int, window_id: int):
 		self.id = id_
@@ -136,6 +139,57 @@ class Connection:
 				monthly = data[4],
 			)
 
+	def program_create(self, name: str, group: int) -> int:
+		self.cursor.execute(
+			"INSERT INTO Program (name, program_group) VALUES (?, ?)",
+			(name, group),
+		)
+		self.connection.commit()
+		return self.cursor.lastrowid
+		
+	def program_get(self, program_id: int) -> Program:
+		self.cursor.execute("SELECT id, name, program_group FROM Program")
+		data = self.cursor.fetchone()
+		group = self.group_get(data[2])
+		processes = list(self.program_process_list(program_id))
+		return Program(
+			id = data[0],
+			name = data[1],
+			group = group,
+			processes = processes,
+		)
+		
+	def program_list(self) -> Iterable[Program]:
+		for data in self.cursor.execute(
+			"SELECT id, name, program_group FROM Program"):
+			group = self.group_get(data[2])
+			processes = list(self.program_process_list(data[0]))
+			yield Program(
+				id = data[0],
+				name = data[1],
+				group = group,
+				processes = processes,
+			)
+				
+	def process_create(self, name: str, program: int) -> int:
+		self.cursor.execute(
+			"INSERT INTO ProgramProcess (name, program) VALUES (?, ?)",
+			(name, program),
+		)
+		self.connection.commit()
+		return self.cursor.lastrowid
+		
+	def program_process_list(self, program_id: int) -> Iterable[Process]:
+		for data in self.cursor.execute(
+			"SELECT id, name, program FROM ProgramProcess WHERE program == ?",
+			(program_id,),
+		):
+			yield Process(
+				id = data[0],
+				name = data[1],
+				program_id = data[2],
+			)
+
 	def window_week_create(self, name: str) -> int:
 		self.cursor.execute(
 			"INSERT INTO WindowWeek (name) VALUES (?)",
@@ -213,7 +267,14 @@ class Connection:
 		self.cursor.execute(
 			"""CREATE TABLE IF NOT EXISTS Program (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				name TEXT NOT NULL
+				name TEXT NOT NULL,
+				program_group INTEGER NOT NULL -- ProgramGroup FK
+			);""")
+		self.cursor.execute(
+			"""CREATE TABLE IF NOT EXISTS ProgramProcess (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				name TEXT NOT NULL,
+				program INTEGER NOT NULL -- Program FK
 			);""")
 		self.cursor.execute(
 			"""CREATE TABLE IF NOT EXISTS ProgramGroupLimit (

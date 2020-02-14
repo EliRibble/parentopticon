@@ -17,7 +17,7 @@ async def root(request):
 	limits = app.db_connection.limit_list()
 	window_weeks = app.db_connection.window_week_list()
 	groups = app.db_connection.group_list()
-	programs = [] #app.db_connection.programs_list()
+	programs = app.db_connection.program_list()
 	return _render("index.html",
 		groups=list(groups),
 		limits=list(limits),
@@ -64,6 +64,30 @@ async def limit_post(request):
 async def limit_get(request, limit_id: int):
 	limit = app.db_connection.limit_get(limit_id)
 	return _render("limit.html", limit=limit)
+
+@app.route("/program/<program_id:int>", methods=["GET"])
+async def program(request, program_id: int):
+	program = app.db_connection.program_get(program_id)
+	return _render("program.html", program=program)
+
+@app.route("/program", methods=["POST"])
+async def program_post(request):
+	name = request.form["name"][0]
+	group = int(request.form["group"][0])
+	program_id = app.db_connection.program_create(
+		name = name,
+		group = group,
+	)
+	processes_str = request.form["processes"][0]
+	if processes_str:
+		for process in processes_str.split(","):
+			process = process.strip()
+			app.db_connection.process_create(
+				name = process,
+				program = program_id,
+			)
+	return redirect("/program/{}".format(program_id))
+
 
 @app.route("/window", methods=["POST"])
 async def window_post(request):
