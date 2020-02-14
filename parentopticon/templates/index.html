@@ -97,7 +97,7 @@
   <table>
     <tr><th>Name</th></tr>
   {% for program in programs %}
-  	<tr><td>program.name</td></tr>
+  	<tr><td><a href="/program/{{ program.id }}">{{ program.name }}</td></tr>
   {% endfor %}
   </table>
 {% else %}
