@@ -1,4 +1,5 @@
 import collections
+import datetime
 import logging
 import sqlite3
 from typing import Iterable, List, Optional
@@ -9,6 +10,7 @@ Group = collections.namedtuple("Group", ("id", "name", "limit", "window_week"))
 Limit = collections.namedtuple("Limit", ("id", "name", "daily", "weekly", "monthly"))
 Process = collections.namedtuple("Process", ("id", "name", "program_id"))
 Program = collections.namedtuple("Program", ("id", "name", "group", "processes"))
+ProgramSession = collections.namedtuple("ProgramSession", ("id", "end", "start", "program"))
 
 class WindowWeekDaySpan:
 	def __init__(self, id_: int, day: int, end: int, start: int, window_id: int):
@@ -72,12 +74,15 @@ class Connection:
 		self.connection = None
 		self.cursor = None
 
-	def connect(self):
-		self.connection = sqlite3.connect("/usr/share/parentopticon/db.sqlite")
+	def connect(self, path: Optional[str] = "/usr/share/parentopticon/db.sqlite"):
+		self.connection = sqlite3.connect(
+			path,
+			detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
+		)
 		self.cursor = self.connection.cursor()
 		self._create_tables()
 
-	def group_create(self, name: str, limit: Optional[int], window_week: Optional[int]) -> int:
+	def group_create(self, name: str, limit: Optional[int] = None, window_week: Optional[int] = None) -> int:
 		self.cursor.execute(
 			"INSERT INTO ProgramGroup (name, group_limit, window_week) VALUES (?, ?, ?)",
 			(name, limit, window_week))
@@ -170,7 +175,71 @@ class Connection:
 				group = group,
 				processes = processes,
 			)
-				
+
+	def program_session_create(self, end: Optional[datetime.date], start: datetime.datetime, program_id: int) -> int:
+		self.cursor.execute(
+			"INSERT INTO ProgramSession (end, start, program) VALUES (?, ?, ?)",
+			(end, start, program_id),
+		)
+		self.connection.commit()
+		return self.cursor.lastrowid
+
+	def program_session_get(self, program_id: int) -> Optional[ProgramSession]:
+		"""Get a program session."""
+		self.cursor.execute(
+			"SELECT id, end, start, program FROM ProgramSession WHERE program == ?",
+			(program_id,)
+		)
+		data = self.cursor.fetchone()
+		program = self.program_get(data[3])
+		return ProgramSession(
+			id = data[0],
+			end = data[1],
+			start = data[2],
+			program = program,
+		)
+
+	def program_session_get_open(self, program_id: int) -> Optional[ProgramSession]:
+		"""Get a program session, if it exists."""
+		self.cursor.execute(
+			"SELECT id, end, start, program FROM ProgramSession WHERE program == ? AND end IS NULL",
+			(program_id,)
+		)
+		data = self.cursor.fetchone()
+		if not data:
+			return
+		program = self.program_get(data[3])
+		return ProgramSession(
+			id = data[0],
+			end = data[1],
+			start = data[2],
+			program = program,
+		)
+
+	def program_session_ensure_closed(self, program_id: int) -> None:
+		"""Make sure any open program sessions are now closed."""
+		program_session = self.program_session_get_open(program_id)
+		if not program_session:
+			return
+		self.program_session_close(program_session.id)
+
+	def program_session_ensure_exists(self, program_id: int) -> int:
+		"""Make sure an open program session exists for the program."""
+		program_session = self.program_session_get_open(program_id)
+		if program_session:
+			return program_session.id
+		return self.program_session_create(
+			end = None,
+			start = datetime.datetime.now(),
+			program_id=program_id)
+
+
+	def program_session_close(self, program_session_id: int) -> None:
+		self.cursor.execute(
+			"UPDATE ProgramSession SET end = ? WHERE id = ?",
+			(datetime.datetime.now(), program_session_id)
+		)
+
 	def process_create(self, name: str, program: int) -> int:
 		self.cursor.execute(
 			"INSERT INTO ProgramProcess (name, program) VALUES (?, ?)",
@@ -294,23 +363,24 @@ class Connection:
 		self.cursor.execute(
 			"""CREATE TABLE IF NOT EXISTS UserSession (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				end TEXT NOT NULL, 
-				start TEXT NOT NULL
+				end timestamp,
+				start timestamp NOT NULL,
+				username TEXT NOT NULL
 			);""")
 		self.cursor.execute(
 			"""CREATE TABLE IF NOT EXISTS ProgramSession (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				end TEXT NOT NULL,
-				start TEXT NOT NULL,
-				program TEXT NOT NULL
+				end timestamp,
+				start timestamp NOT NULL,
+				program INTEGER NOT NULL -- Program FK
 			);""")
 		self.cursor.execute(
 			"""CREATE TABLE IF NOT EXISTS ProgramGroupLimitBonus (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				amount INTEGER NOT NULL,
-				created TEXT NOT NULL,
+				created timestamp NOT NULL,
 				creator TEXT NOT NULL,
-				effective TEXT NOT NULL,
+				effective date NOT NULL,
 				message TEXT,
 				period INT NOT NULL
 			);""")
@@ -330,9 +400,9 @@ class Connection:
 		self.cursor.execute(
 			"""CREATE TABLE IF NOT EXISTS WindowWeekDayOverride (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				created TEXT NOT NULL,
+				created timestamp NOT NULL,
 				creator TEXT NOT NULL,
-				effective TEXT NOT NULL,
+				effective date NOT NULL,
 				message TEXT,
 				windowset TEXT NOT NULL
 			);""")
