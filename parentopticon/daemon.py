@@ -3,12 +3,14 @@ Module for daemon logic for parentopticon.
 These are functions that run all the time.
 """
 import asyncio
+import datetime
 import logging
 import time
 
 from parentopticon import db, log, restrictions, snapshot
 from parentopticon.webserver import app
 
+import arrow
 import jinja2
 
 
@@ -36,6 +38,12 @@ async def on_server_start(app, loop) -> None:
 		loader=jinja2.PackageLoader("parentopticon", "templates"),
 		autoescape=jinja2.select_autoescape(["html", "xml"]),
 	)
+	app.jinja_env.filters["humanize"] = _humanize
+
+
+def _humanize(t: datetime.datetime):
+	return arrow.get(t).humanize() if t else "none"
+
 
 @app.listener("before_server_stop")
 async def on_server_stop(app, loop) -> None:

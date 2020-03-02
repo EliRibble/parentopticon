@@ -14,6 +14,7 @@ setuptools.setup(
 	url="https://github.com/eliribble/parentopticon",
 	packages=setuptools.find_packages(),
 	install_requires = [
+		"arrow==0.15.5",
 		"Jinja2==2.11.1",
 		"psutil==5.6.3",
 		"sanic==19.12.2",

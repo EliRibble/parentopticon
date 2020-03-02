@@ -18,9 +18,11 @@ async def root(request):
 	window_weeks = app.db_connection.window_week_list()
 	groups = app.db_connection.group_list()
 	programs = app.db_connection.program_list()
+	program_sessions = app.db_connection.program_session_list_open()
 	return _render("index.html",
 		groups=list(groups),
 		limits=list(limits),
+		program_sessions=program_sessions,
 		programs=programs,
 		window_weeks=list(window_weeks),
 	)
