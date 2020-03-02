@@ -14,5 +14,19 @@
 	{% endfor %}
   </ul>
   <label for="window_week">Group: <a href="/group/{{ program.group.id }}">{{ program.group.name }}</a></label>
+</form>
+{% if program_sessions %}
+  <table>
+    <tr><th>Start</th><th>End</th><th>Duration</th></tr>
+	{% for program_session in program_sessions %}
+	  <tr>
+	    <td>{{ program_session.start | humanize }}</td>
+		<td>{{ program_session.end | humanize }}</td>
+		<td>{{ program_session.duration | timespan }}</td>
+	  </tr>
+	{% endfor %}
+{% else %}
+  <p>No program sessions yet.</p>
+{% endif %}
 </body>
 </html>

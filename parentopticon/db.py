@@ -10,7 +10,19 @@ Group = collections.namedtuple("Group", ("id", "name", "limit", "window_week"))
 Limit = collections.namedtuple("Limit", ("id", "name", "daily", "weekly", "monthly"))
 Process = collections.namedtuple("Process", ("id", "name", "program_id"))
 Program = collections.namedtuple("Program", ("id", "name", "group", "processes"))
-ProgramSession = collections.namedtuple("ProgramSession", ("id", "end", "start", "program"))
+
+class ProgramSession:
+	def __init__(self, id_: int, end: datetime.datetime, start: datetime.datetime, program: Program) -> None:
+		self.id = id_
+		self.end = end
+		self.start = start
+		self.program = program
+
+	@property
+	def duration(self) -> Optional[datetime.timedelta]:
+		"Get the duration of the session, if possible."
+		if self.start and self.end:
+			return self.end - self.start
 
 class WindowWeekDaySpan:
 	def __init__(self, id_: int, day: int, end: int, start: int, window_id: int):
@@ -217,7 +229,7 @@ class Connection:
 		data = self.cursor.fetchone()
 		program = self.program_get(data[3])
 		return ProgramSession(
-			id = data[0],
+			id_ = data[0],
 			end = data[1],
 			start = data[2],
 			program = program,
@@ -234,11 +246,25 @@ class Connection:
 			return
 		program = self.program_get(data[3])
 		return ProgramSession(
-			id = data[0],
+			id_ = data[0],
 			end = data[1],
 			start = data[2],
 			program = program,
 		)
+
+	def program_session_list_by_program(self, program_id: int) -> Iterable[ProgramSession]:
+		"""Get all the program sessions for a particular program."""
+		for data in self.cursor.execute(
+			"SELECT id, end, start, program FROM ProgramSession WHERE program == ? ORDER BY start",
+			(program_id,)):
+			program = self.program_get(data[3])
+			yield ProgramSession(
+				id_ = data[0],
+				end = data[1],
+				start = data[2],
+				program = program,
+			)
+				
 
 	def program_session_list_open(self) -> Iterable[ProgramSession]:
 		"""Get all the open program sessions."""
@@ -247,7 +273,7 @@ class Connection:
 			):
 			program = self.program_get(data[3])
 			yield ProgramSession(
-				id = data[0],
+				id_ = data[0],
 				end = data[1],
 				start = data[2],
 				program = program,

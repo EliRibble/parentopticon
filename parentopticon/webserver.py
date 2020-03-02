@@ -70,7 +70,8 @@ async def limit_get(request, limit_id: int):
 @app.route("/program/<program_id:int>", methods=["GET"])
 async def program(request, program_id: int):
 	program = app.db_connection.program_get(program_id)
-	return _render("program.html", program=program)
+	program_sessions = app.db_connection.program_session_list_by_program(program_id)
+	return _render("program.html", program=program, program_sessions=program_sessions)
 
 @app.route("/program", methods=["POST"])
 async def program_post(request):

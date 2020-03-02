@@ -39,11 +39,28 @@ async def on_server_start(app, loop) -> None:
 		autoescape=jinja2.select_autoescape(["html", "xml"]),
 	)
 	app.jinja_env.filters["humanize"] = _humanize
+	app.jinja_env.filters["timespan"] = _timespan
 
 
-def _humanize(t: datetime.datetime):
+def _humanize(t: datetime.datetime) -> str:
 	return arrow.get(t).humanize() if t else "none"
 
+def _timespan(t: datetime.timedelta) -> str:
+	s = t.total_seconds()
+	if s < 10:
+		return "few seconds"
+	elif s < 100:
+		return "{} seconds".format(s)
+	elif s < 1000:
+		return "few minutes"
+	elif s < (60 * 60 * 100):
+		return "{} minutes".format(s / 60)
+	elif s < (60 * 60 * 30):
+		return "{} hours".format(s / (60 * 60))
+	elif s < (60 * 60 * 24 * 400):
+		return "{} days".format(s / (60 * 60 * 24))
+	else:
+		return "{} years".format(s / (60 * 60 * 24 * 365))
 
 @app.listener("before_server_stop")
 async def on_server_stop(app, loop) -> None:
