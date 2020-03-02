@@ -176,6 +176,12 @@ class Connection:
 				processes = processes,
 			)
 
+	def program_session_close(self, program_session_id: int) -> None:
+		self.cursor.execute(
+			"UPDATE ProgramSession SET end = ? WHERE id = ?",
+			(datetime.datetime.now(), program_session_id)
+		)
+
 	def program_session_create(self, end: Optional[datetime.date], start: datetime.datetime, program_id: int) -> int:
 		self.cursor.execute(
 			"INSERT INTO ProgramSession (end, start, program) VALUES (?, ?, ?)",
@@ -183,6 +189,24 @@ class Connection:
 		)
 		self.connection.commit()
 		return self.cursor.lastrowid
+
+	def program_session_ensure_closed(self, program_id: int) -> None:
+		"""Make sure any open program sessions are now closed."""
+		program_session = self.program_session_get_open(program_id)
+		if not program_session:
+			return
+		self.program_session_close(program_session.id)
+
+	def program_session_ensure_exists(self, program_id: int) -> int:
+		"""Make sure an open program session exists for the program."""
+		program_session = self.program_session_get_open(program_id)
+		if program_session:
+			return program_session.id
+		return self.program_session_create(
+			end = None,
+			start = datetime.datetime.now(),
+			program_id=program_id)
+
 
 	def program_session_get(self, program_id: int) -> Optional[ProgramSession]:
 		"""Get a program session."""
@@ -216,29 +240,18 @@ class Connection:
 			program = program,
 		)
 
-	def program_session_ensure_closed(self, program_id: int) -> None:
-		"""Make sure any open program sessions are now closed."""
-		program_session = self.program_session_get_open(program_id)
-		if not program_session:
-			return
-		self.program_session_close(program_session.id)
-
-	def program_session_ensure_exists(self, program_id: int) -> int:
-		"""Make sure an open program session exists for the program."""
-		program_session = self.program_session_get_open(program_id)
-		if program_session:
-			return program_session.id
-		return self.program_session_create(
-			end = None,
-			start = datetime.datetime.now(),
-			program_id=program_id)
-
-
-	def program_session_close(self, program_session_id: int) -> None:
-		self.cursor.execute(
-			"UPDATE ProgramSession SET end = ? WHERE id = ?",
-			(datetime.datetime.now(), program_session_id)
-		)
+	def program_session_list_open(self) -> Iterable[ProgramSession]:
+		"""Get all the open program sessions."""
+		for data in self.cursor.execute(
+			"SELECT id, end, start, program FROM ProgramSession WHERE end IS NULL",
+			):
+			program = self.program_get(data[3])
+			yield ProgramSession(
+				id = data[0],
+				end = data[1],
+				start = data[2],
+				program = program,
+			)
 
 	def process_create(self, name: str, program: int) -> int:
 		self.cursor.execute(
