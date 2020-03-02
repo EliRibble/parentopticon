@@ -4,13 +4,16 @@ import unittest
 
 from parentopticon import db
 
+TEST_DB_PATH = "/tmp/parentopticon-test-db.sqlite"
 class ProgramSessionTests(unittest.TestCase):
+	def setUpClass():
+		if os.path.exists(TEST_DB_PATH):
+			os.unlink(TEST_DB_PATH)
+
 	def setUp(self):
 		self.db = db.Connection()
-		test_db_path = "/tmp/parentopticon-test-db.sqlite"
-		if os.path.exists(test_db_path):
-			os.unlink(test_db_path)
-		self.db.connect(test_db_path)
+		self.db.connect(TEST_DB_PATH)
+		self.db.truncate_all()
 		self.group_id = self.db.group_create("games")
 		self.program_id = self.db.program_create("Minecraft", self.group_id)
 		self.db.process_create("net.minecraft.client.main.Main", self.program_id)
