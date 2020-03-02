@@ -12,11 +12,11 @@ Process = collections.namedtuple("Process", ("id", "name", "program_id"))
 Program = collections.namedtuple("Program", ("id", "name", "group", "processes"))
 
 class ProgramSession:
-	def __init__(self, id_: int, end: datetime.datetime, start: datetime.datetime, program: Program) -> None:
+	def __init__(self, id_: int, end: datetime.datetime, start: datetime.datetime, program_id: int) -> None:
 		self.id = id_
 		self.end = end
 		self.start = start
-		self.program = program
+		self.program_id = program_id
 
 	@property
 	def duration(self) -> Optional[datetime.timedelta]:
@@ -227,12 +227,11 @@ class Connection:
 			(program_id,)
 		)
 		data = self.cursor.fetchone()
-		program = self.program_get(data[3])
 		return ProgramSession(
 			id_ = data[0],
 			end = data[1],
 			start = data[2],
-			program = program,
+			program_id = data[3],
 		)
 
 	def program_session_get_open(self, program_id: int) -> Optional[ProgramSession]:
@@ -244,12 +243,11 @@ class Connection:
 		data = self.cursor.fetchone()
 		if not data:
 			return
-		program = self.program_get(data[3])
 		return ProgramSession(
 			id_ = data[0],
 			end = data[1],
 			start = data[2],
-			program = program,
+			program_id = data[3],
 		)
 
 	def program_session_list_by_program(self, program_id: int) -> Iterable[ProgramSession]:
@@ -257,12 +255,11 @@ class Connection:
 		for data in self.cursor.execute(
 			"SELECT id, end, start, program FROM ProgramSession WHERE program == ? ORDER BY start",
 			(program_id,)):
-			program = self.program_get(data[3])
 			yield ProgramSession(
 				id_ = data[0],
 				end = data[1],
 				start = data[2],
-				program = program,
+				program_id = data[3],
 			)
 				
 
@@ -271,12 +268,11 @@ class Connection:
 		for data in self.cursor.execute(
 			"SELECT id, end, start, program FROM ProgramSession WHERE end IS NULL",
 			):
-			program = self.program_get(data[3])
 			yield ProgramSession(
 				id_ = data[0],
 				end = data[1],
 				start = data[2],
-				program = program,
+				program_id = data[3],
 			)
 
 	def process_create(self, name: str, program: int) -> int:
