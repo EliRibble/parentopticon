@@ -2,14 +2,91 @@ import collections
 import datetime
 import logging
 import sqlite3
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Mapping, Optional, Tuple
 
 LOGGER = logging.getLogger(__name__)
 
 Group = collections.namedtuple("Group", ("id", "name", "limit", "window_week"))
-Limit = collections.namedtuple("Limit", ("id", "name", "daily", "weekly", "monthly"))
+Limit = collections.namedtuple("Limit", (
+"id", "name", "daily", "weekly", "monthly"
+))
 Process = collections.namedtuple("Process", ("id", "name", "program_id"))
 Program = collections.namedtuple("Program", ("id", "name", "group", "processes"))
+
+class Column:
+	"Represents a single column on a table."
+	TYPENAME = "NONE"
+	def __init__(self,
+		attributes: Iterable[str] = None,
+		null: bool = True) -> None:
+		self.attributes = attributes or []
+		self.null = null
+
+	def create_statement(self, name):
+		"Get the SQL statement to create this column."
+		attributes = ([] if self.null else ["NOT NULL"]) + self.attributes
+		if attributes:
+			return " ".join((
+				name,
+				self.TYPENAME,
+				" ".join(attributes),
+			))
+		return " ".join((name, self.TYPENAME))
+
+class ColumnText(Column):
+	"Represents a single text column on a table."
+	TYPENAME = "TEXT"
+
+class ColumnInteger(Column):
+	"Represents a single integer column on a table."
+	TYPENAME = "INTEGER"
+
+class Model:
+	"Represents an object from a database."
+	COLUMNS = {}
+
+	@classmethod
+	def columns(cls) -> Mapping[str, Column]:
+		return cls.COLUMNS
+
+	@classmethod
+	def columns_sorted(cls) -> Iterable[Tuple[str, Column]]:
+		"Get all of the columns for this table in sorted order."
+		columns = cls.columns()
+		sorted_keys = sorted(columns.keys())
+		for k in sorted_keys:
+			yield (k, cls.COLUMNS[k])
+
+	@classmethod
+	def create_statement(cls):
+		"Get the SQL statement to create the table."
+		column_lines = [column.create_statement(name) for name, column in cls.columns_sorted()]
+		column_content = ",\n".join(column_lines)
+		return "CREATE TABLE IF NOT EXISTS {} (\n{}\n);".format(
+			cls.__name__,
+			column_content,
+		)
+
+class ModelWithID(Model):
+	"An object in the database with an explicit ID."
+	COLUMNS = {
+		"id": ColumnInteger(attributes=["PRIMARY KEY", "AUTOINCREMENT"]),
+	}
+
+class Limit(Model):
+	"A limit to apply to a group of programs."
+	COLUMNS = {
+		"name": ColumnText(null=False),
+		"minutes_monday": ColumnInteger(null=False),
+		"minutes_tuesday": ColumnInteger(null=False),
+		"minutes_wednesday": ColumnInteger(null=False),
+		"minutes_thursday": ColumnInteger(null=False),
+		"minutes_friday": ColumnInteger(null=False),
+		"minutes_saturday": ColumnInteger(null=False),
+		"minutes_sunday": ColumnInteger(null=False),
+		"minutes_weekly": ColumnInteger(null=False),
+		"minutes_monthly": ColumnInteger(null=False),
+	}
 
 class ProgramSession:
 	def __init__(self, id_: int, end: datetime.datetime, start: datetime.datetime, program_id: int) -> None:
@@ -363,7 +440,7 @@ class Connection:
 		self.cursor.execute(
 			"DELETE FROM WindowWeekDaySpan")
 		self.cursor.execute(
-			"DELETE FROM WindowWeekDayOverride ")
+			"DELETE FROM WindowWeekDayOverride")
 
 	def window_week_create(self, name: str) -> int:
 		self.cursor.execute(

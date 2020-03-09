@@ -14,7 +14,28 @@ class DBTestCase(unittest.TestCase):
 		self.db = db.Connection()
 		self.db.connect(TEST_DB_PATH)
 		self.db.truncate_all()
-	
+
+class ModelTests(DBTestCase):
+	"Test all of our logic around the model class."
+	def setUpClass():
+		ensure_test_db_exists()
+
+	def test_create_table(self):
+		"Can we get a proper create table clause?"
+		class MyTable(db.Model):
+			COLUMNS = {
+				"name": db.ColumnText(null=False),
+				"count": db.ColumnInteger(),
+			}
+		result = MyTable.create_statement()
+		expected = "\n".join((
+			"CREATE TABLE IF NOT EXISTS MyTable (",
+			"count INTEGER,",
+			"name TEXT NOT NULL",
+			");",
+		))
+		self.assertEqual(result, expected)
+
 class ProgramSessionTests(DBTestCase):
 	def setUpClass():
 		ensure_test_db_exists()
