@@ -446,10 +446,11 @@ class Connection:
 				program_group INTEGER NOT NULL -- ProgramGroup FK
 			);""")
 		self.cursor.execute(
-			"""CREATE TABLE IF NOT EXISTS ProgramProcess (
+			"""CREATE TABLE IF NOT EXISTS ProgramGroup (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				name TEXT NOT NULL,
-				program INTEGER NOT NULL -- Program FK
+				group_limit INTEGER, -- Limit FK
+				window_week INTEGER -- WindowWeek FK
 			);""")
 		self.cursor.execute(
 			"""CREATE TABLE IF NOT EXISTS ProgramGroupLimit (
@@ -460,18 +461,10 @@ class Connection:
 				monthly INTEGER NOT NULL
 			);""")
 		self.cursor.execute(
-			"""CREATE TABLE IF NOT EXISTS ProgramGroup (
+			"""CREATE TABLE IF NOT EXISTS ProgramProcess (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				name TEXT NOT NULL,
-				group_limit INTEGER, -- Limit FK
-				window_week INTEGER -- WindowWeek FK
-			);""")
-		self.cursor.execute(
-			"""CREATE TABLE IF NOT EXISTS UserSession (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				end timestamp,
-				start timestamp NOT NULL,
-				username TEXT NOT NULL
+				program INTEGER NOT NULL -- Program FK
 			);""")
 		self.cursor.execute(
 			"""CREATE TABLE IF NOT EXISTS ProgramSession (
@@ -491,6 +484,13 @@ class Connection:
 				period INT NOT NULL
 			);""")
 		self.cursor.execute(
+			"""CREATE TABLE IF NOT EXISTS UserSession (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				end timestamp,
+				start timestamp NOT NULL,
+				username TEXT NOT NULL
+			);""")
+		self.cursor.execute(
 			"""CREATE TABLE IF NOT EXISTS WindowWeek (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				name TEXT NOT NULL
@@ -499,8 +499,8 @@ class Connection:
 			"""CREATE TABLE IF NOT EXISTS WindowWeekDaySpan (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				day INTEGER NOT NULL,
-				end INTEGER NOT NULL,
-				start INTEGER NOT NULL,
+				end time NOT NULL,
+				start time NOT NULL,
 				window_id INTEGER -- WindowWeek fk
 			);""")
 		self.cursor.execute(
