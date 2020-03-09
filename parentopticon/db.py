@@ -32,6 +32,16 @@ class WindowWeekDaySpan:
 		self.start = start
 		self.window_id = window_id
 
+	def minutes_left(self, moment: datetime.time) -> int:
+		"""Get the minutes left in the span for a moment.
+
+		Returns: 0 if the current moment falls outside of the span,
+			or the number of minutes left until the span ends if the
+			current moment is inside the span.
+		"""
+		
+		return max(span.minutes_left(moment) for span in self.spans)
+
 	@property
 	def value(self) -> str:
 		return "{}-{}".format(self.start, self.end)
@@ -41,6 +51,15 @@ class WindowWeekDay:
 		self.window_id = window_id
 		self.day = day
 		self.spans = sorted(spans, key=lambda s: s.start)
+
+	def minutes_left(self, moment: datetime.time) -> int:
+		"""Get the minutes left in the window week day for a moment.
+
+		Returns: 0 if the current moment falls outside of a span,
+			or the number of minutes left until the span ends if the
+			current moment is inside a window.
+		"""
+		return max(span.minutes_left(moment) for span in self.spans)
 
 	@property
 	def value(self) -> str:
@@ -52,32 +71,50 @@ class WindowWeek:
 		self.name = name
 		self.days = days
 
+	def from_iso_weekday(self, day: int) -> WindowWeekDay:
+		"Get the correct day span from an isoweekday"
+		return self.days[day-1]
+
+	def minutes_left(self, moment: datetime.datetime) -> int:
+		"""Get the minutes left in the window week for a given moment.
+
+		Returns: 0 if the moment falls outside of a window,
+			or the number of minutes left until the window ends if the
+			current moment is inside a window.
+		"""
+		day = self.from_iso_weekday(moment.isoweekday())
+		return day.minutes_left(moment.time())
+
+	def today(self) -> WindowWeekDay:
+		"Get the day span for today."
+		return self.from_iso_weekday(datetime.datetime.now().isoweekday())
+
 	@property
-	def monday(self):
+	def monday(self) -> WindowWeekDay:
 		return self.days[0]
 
 	@property
-	def tuesday(self):
+	def tuesday(self) -> WindowWeekDay:
 		return self.days[1]
 
 	@property
-	def wednesday(self):
+	def wednesday(self) -> WindowWeekDay:
 		return self.days[2]
 
 	@property
-	def thursday(self):
+	def thursday(self) -> WindowWeekDay:
 		return self.days[3]
 
 	@property
-	def friday(self):
+	def friday(self) -> WindowWeekDay:
 		return self.days[4]
 
 	@property
-	def saturday(self):
+	def saturday(self) -> WindowWeekDay:
 		return self.days[5]
 
 	@property
-	def sunday(self):
+	def sunday(self) -> WindowWeekDay:
 		return self.days[6]
 
 class Connection:
@@ -275,6 +312,18 @@ class Connection:
 				program_id = data[3],
 			)
 
+	def program_session_list_since(self, moment: datetime.datetime) -> Iterable[ProgramSession]:
+		"""Get all program sessions that started after a moment."""
+		for data in self.cursor.execute(
+			"SELECT id, end, start, program FROM ProgramSession WHERE start > ?",
+			(moment,)):
+			yield ProgramSession(
+				id_ = data[0],
+				end = data[1],
+				start = data[2],
+				program_id = data[3],
+			)
+
 	def process_create(self, name: str, program: int) -> int:
 		self.cursor.execute(
 			"INSERT INTO ProgramProcess (name, program) VALUES (?, ?)",
@@ -293,6 +342,28 @@ class Connection:
 				name = data[1],
 				program_id = data[2],
 			)
+
+	def truncate_all(self) -> None:
+		self.cursor.execute(
+			"DELETE FROM Program")
+		self.cursor.execute(
+			"DELETE FROM ProgramProcess")
+		self.cursor.execute(
+			"DELETE FROM ProgramGroupLimit")
+		self.cursor.execute(
+			"DELETE FROM ProgramGroup")
+		self.cursor.execute(
+			"DELETE FROM ProgramSession")
+		self.cursor.execute(
+			"DELETE FROM ProgramGroupLimitBonus")
+		self.cursor.execute(
+			"DELETE FROM UserSession")
+		self.cursor.execute(
+			"DELETE FROM WindowWeek")
+		self.cursor.execute(
+			"DELETE FROM WindowWeekDaySpan")
+		self.cursor.execute(
+			"DELETE FROM WindowWeekDayOverride ")
 
 	def window_week_create(self, name: str) -> int:
 		self.cursor.execute(

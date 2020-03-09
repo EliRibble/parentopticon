@@ -7,7 +7,7 @@ import datetime
 import logging
 import time
 
-from parentopticon import db, log, restrictions, snapshot
+from parentopticon import db, enforcement, log, restrictions, snapshot
 from parentopticon.webserver import app
 
 import arrow
@@ -19,7 +19,8 @@ async def _snapshot_loop(stop_event: asyncio.Event, db_connection: db.Connection
 	"""Perform the regular snapsots of what's running."""
 	logging.info("Started loop to take snapshots.")
 	while not stop_event.is_set():
-		shot = snapshot.take(db_connection, SNAPSHOT_TIMESPAN_SECONDS)
+		snapshot.take(db_connection, SNAPSHOT_TIMESPAN_SECONDS)
+		enforcement.go(db_connection)
 		try:
 			await asyncio.wait_for(stop_event.wait(), SNAPSHOT_TIMESPAN_SECONDS)
 		except asyncio.TimeoutError:
