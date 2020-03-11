@@ -2,7 +2,7 @@ import collections
 import datetime
 import logging
 import sqlite3
-from typing import Iterable, List, Mapping, Optional, Tuple
+from typing import Any, Iterable, List, Mapping, Optional, Tuple
 
 LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +66,38 @@ class Model:
 			cls.__name__,
 			column_content,
 		)
+
+	@classmethod
+	def insert(cls, connection: "Connection", **kwargs) -> int:
+		"Insert a new row into the table. Return rowid."
+		statement, values = cls.insert_statement(**kwargs)
+		return connection.execute_commit_return(statement, values)
+
+	@classmethod
+	def insert_statement(cls, **kwargs) -> Tuple[str, Iterable[str]]:
+		"""Get the SQL statement for inserting into this table.
+
+		Returns:
+			The SQL statement and the list of parameters for
+			the bindings within the statement.
+		"""
+		column_names = [k for k, _ in cls.columns_sorted()]
+		kwarg_keys_sorted = sorted(kwargs.keys())
+		if column_names != kwarg_keys_sorted:
+			raise Exception("kwargs and column names must match")
+		placeholders = ", ".join("?" * len(column_names))
+		values = [kwargs[column_name] for column_name in column_names]
+		return ("INSERT INTO {} ({}) VALUES ({})".format(
+			cls.__name__,
+			", ".join(column_names),
+			placeholders,
+		), values)
+
+	@classmethod
+	def truncate_statement(cls) -> str:
+		"Get the statement to truncate the table."
+		return "DELETE FROM {}".format(cls.__name__)
+
 
 class ModelWithID(Model):
 	"An object in the database with an explicit ID."
@@ -207,6 +239,15 @@ class Connection:
 		)
 		self.cursor = self.connection.cursor()
 		self._create_tables()
+
+	def execute(self, statement) -> Iterable[Tuple[Any]]:
+		return self.cursor.execute(statement)
+
+	def execute_commit_return(self, *args) -> int:
+		"Execute a statement, commit it, return the rowid."
+		self.cursor.execute(*args)
+		self.connection.commit()
+		return self.cursor.lastrowid
 
 	def group_create(self, name: str, limit: Optional[int] = None, window_week: Optional[int] = None) -> int:
 		self.cursor.execute(

@@ -17,17 +17,23 @@ class DBTestCase(unittest.TestCase):
 
 class ModelTests(DBTestCase):
 	"Test all of our logic around the model class."
+	class MyTable(db.Model):
+		COLUMNS = {
+			"name": db.ColumnText(null=False),
+			"count": db.ColumnInteger(),
+		}
+
 	def setUpClass():
 		ensure_test_db_exists()
 
+	def setUp(self):
+		super().setUp()
+		self.db.execute_commit_return(ModelTests.MyTable.create_statement())
+		self.db.execute_commit_return(ModelTests.MyTable.truncate_statement())
+
 	def test_create_table(self):
 		"Can we get a proper create table clause?"
-		class MyTable(db.Model):
-			COLUMNS = {
-				"name": db.ColumnText(null=False),
-				"count": db.ColumnInteger(),
-			}
-		result = MyTable.create_statement()
+		result = ModelTests.MyTable.create_statement()
 		expected = "\n".join((
 			"CREATE TABLE IF NOT EXISTS MyTable (",
 			"count INTEGER,",
@@ -35,6 +41,13 @@ class ModelTests(DBTestCase):
 			");",
 		))
 		self.assertEqual(result, expected)
+
+	def test_insert_table(self):
+		"Can we insert a row into a table?"
+		rowid = ModelTests.MyTable.insert(self.db, count=3, name="foobar")
+		found = self.db.execute("SELECT count, name FROM MyTable").fetchall()
+		self.assertEqual(len(found), 1)
+
 
 class ProgramSessionTests(DBTestCase):
 	def setUpClass():
