@@ -13,18 +13,28 @@ Limit = collections.namedtuple("Limit", (
 Process = collections.namedtuple("Process", ("id", "name", "program_id"))
 Program = collections.namedtuple("Program", ("id", "name", "group", "processes"))
 
+StatementAndBinding = Tuple[str, Iterable[Any]]
+
 class Column:
 	"Represents a single column on a table."
 	TYPENAME = "NONE"
 	def __init__(self,
-		attributes: Iterable[str] = None,
-		null: bool = True) -> None:
-		self.attributes = attributes or []
+		autoincrement: bool = False,
+		null: bool = True,
+		primary_key: bool = False) -> None:
+		self.autoincrement = autoincrement
 		self.null = null
+		self.primary_key = primary_key
 
 	def create_statement(self, name):
 		"Get the SQL statement to create this column."
-		attributes = ([] if self.null else ["NOT NULL"]) + self.attributes
+		attributes = []
+		if self.primary_key:
+			attributes.append("PRIMARY KEY")
+		if self.autoincrement:
+			attributes.append("AUTOINCREMENT")
+		if not self.null:
+			attributes.append("NOT NULL")
 		if attributes:
 			return " ".join((
 				name,
@@ -44,6 +54,10 @@ class ColumnInteger(Column):
 class Model:
 	"Represents an object from a database."
 	COLUMNS = {}
+
+	def __init__(self, **kwargs) -> None:
+		for k, v in kwargs.items():
+			setattr(self, k, v)
 
 	@classmethod
 	def columns(cls) -> Mapping[str, Column]:
@@ -68,30 +82,51 @@ class Model:
 		)
 
 	@classmethod
+	def get(cls, connection: "Connection", id_: int) -> "Model":
+		"Get a single row by its ID"
+		select_statement = cls.select_statement(
+			where="id = ?")
+		row = connection.execute(select_statement, (id_,)).fetchone()
+		column_names = [k for k, _ in cls.columns_sorted()]
+		data = {k: v for k, v in zip(column_names, row)}
+		return cls(**data)
+
+	@classmethod
 	def insert(cls, connection: "Connection", **kwargs) -> int:
 		"Insert a new row into the table. Return rowid."
 		statement, values = cls.insert_statement(**kwargs)
 		return connection.execute_commit_return(statement, values)
 
 	@classmethod
-	def insert_statement(cls, **kwargs) -> Tuple[str, Iterable[str]]:
+	def insert_statement(cls, **kwargs) -> StatementAndBinding:
 		"""Get the SQL statement for inserting into this table.
 
 		Returns:
 			The SQL statement and the list of parameters for
 			the bindings within the statement.
 		"""
-		column_names = [k for k, _ in cls.columns_sorted()]
 		kwarg_keys_sorted = sorted(kwargs.keys())
-		if column_names != kwarg_keys_sorted:
-			raise Exception("kwargs and column names must match")
-		placeholders = ", ".join("?" * len(column_names))
-		values = [kwargs[column_name] for column_name in column_names]
+		placeholders = ", ".join("?" * len(kwargs))
+		values = [kwargs[k] for k in kwarg_keys_sorted]
 		return ("INSERT INTO {} ({}) VALUES ({})".format(
 			cls.__name__,
-			", ".join(column_names),
+			", ".join(kwarg_keys_sorted),
 			placeholders,
 		), values)
+
+	@classmethod
+	def select_statement(cls, where=None) -> str:
+		"""Get the SQL statement for selecting a row from this table.
+
+		Returns:
+			The SQL statement for getting a single row.
+		"""
+		column_names = [k for k, _ in cls.columns_sorted()]
+		return "SELECT {} FROM {} {}".format(
+			", ".join(column_names),
+			cls.__name__,
+			("WHERE " + where) if where else "",
+		)
 
 	@classmethod
 	def truncate_statement(cls) -> str:
@@ -102,7 +137,7 @@ class Model:
 class ModelWithID(Model):
 	"An object in the database with an explicit ID."
 	COLUMNS = {
-		"id": ColumnInteger(attributes=["PRIMARY KEY", "AUTOINCREMENT"]),
+		"id": ColumnInteger(autoincrement=True, primary_key=True),
 	}
 
 class Limit(Model):
@@ -240,8 +275,8 @@ class Connection:
 		self.cursor = self.connection.cursor()
 		self._create_tables()
 
-	def execute(self, statement) -> Iterable[Tuple[Any]]:
-		return self.cursor.execute(statement)
+	def execute(self, *args) -> Iterable[Tuple[Any]]:
+		return self.cursor.execute(*args)
 
 	def execute_commit_return(self, *args) -> int:
 		"Execute a statement, commit it, return the rowid."

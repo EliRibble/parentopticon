@@ -19,8 +19,9 @@ class ModelTests(DBTestCase):
 	"Test all of our logic around the model class."
 	class MyTable(db.Model):
 		COLUMNS = {
-			"name": db.ColumnText(null=False),
+			"id": db.ColumnInteger(autoincrement=True, primary_key=True),
 			"count": db.ColumnInteger(),
+			"name": db.ColumnText(null=False),
 		}
 
 	def setUpClass():
@@ -31,23 +32,31 @@ class ModelTests(DBTestCase):
 		self.db.execute_commit_return(ModelTests.MyTable.create_statement())
 		self.db.execute_commit_return(ModelTests.MyTable.truncate_statement())
 
-	def test_create_table(self):
+	def test_create_statement(self):
 		"Can we get a proper create table clause?"
 		result = ModelTests.MyTable.create_statement()
 		expected = "\n".join((
 			"CREATE TABLE IF NOT EXISTS MyTable (",
 			"count INTEGER,",
+			"id INTEGER PRIMARY KEY AUTOINCREMENT,",
 			"name TEXT NOT NULL",
 			");",
 		))
 		self.assertEqual(result, expected)
 
-	def test_insert_table(self):
+	def test_insert(self):
 		"Can we insert a row into a table?"
 		rowid = ModelTests.MyTable.insert(self.db, count=3, name="foobar")
 		found = self.db.execute("SELECT count, name FROM MyTable").fetchall()
 		self.assertEqual(len(found), 1)
-
+		
+	def test_get(self):
+		"Can we get a row from the table?"
+		rowid = ModelTests.MyTable.insert(self.db, count=3, name="foobar")
+		result = ModelTests.MyTable.get(self.db, rowid)
+		self.assertEqual(result.id, rowid)
+		self.assertEqual(result.count, 3)
+		self.assertEqual(result.name, "foobar")
 
 class ProgramSessionTests(DBTestCase):
 	def setUpClass():
