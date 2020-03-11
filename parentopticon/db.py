@@ -115,6 +115,29 @@ class Model:
 		), values)
 
 	@classmethod
+	def list(cls,
+		connection: "Connection",
+		where: Optional[str] = None,
+		bindings: Iterable[Any] = None,
+		) -> Iterable["Model"]:
+		"""List rows for this table.
+
+		Args:
+			connection: The DB connection to use.
+			where: An optional 'WHERE' clause, minus the 'WHERE'.
+			bindings: Additional bindings for the where clause.
+		Returns:
+			Matching rows as class instances.
+		"""
+		select_statement = cls.select_statement(where=where)
+		bindings = bindings or ()
+		rows = connection.execute(select_statement, bindings)
+		column_names = [k for k, _ in cls.columns_sorted()]
+		for row in rows:
+			data = {k: v for k, v in zip(column_names, row)}
+			yield cls(**data)
+		
+	@classmethod
 	def select_statement(cls, where=None) -> str:
 		"""Get the SQL statement for selecting a row from this table.
 

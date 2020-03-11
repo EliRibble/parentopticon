@@ -58,6 +58,27 @@ class ModelTests(DBTestCase):
 		self.assertEqual(result.count, 3)
 		self.assertEqual(result.name, "foobar")
 
+	def test_list_all(self):
+		"Can we get several rows from the table?"
+		rowids = {
+			ModelTests.MyTable.insert(self.db, count=2, name="foo"),
+			ModelTests.MyTable.insert(self.db, count=4, name="bar"),
+			ModelTests.MyTable.insert(self.db, count=6, name="baz"),
+		}
+		results = ModelTests.MyTable.list(self.db)
+		self.assertEqual({result.id for result in results}, rowids)
+
+	def test_list_some(self):
+		"Can we get several rows from the table with a where clause?"
+		rowids = [
+			ModelTests.MyTable.insert(self.db, count=2, name="foo"),
+			ModelTests.MyTable.insert(self.db, count=4, name="bar"),
+			ModelTests.MyTable.insert(self.db, count=6, name="baz"),
+		]
+		results = ModelTests.MyTable.list(self.db, where="count >= 4")
+		self.assertEqual({result.count for result in results}, {4, 6})
+
+
 class ProgramSessionTests(DBTestCase):
 	def setUpClass():
 		ensure_test_db_exists()
