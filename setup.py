@@ -16,7 +16,7 @@ setuptools.setup(
 	install_requires = [
 		"arrow==0.15.5",
 		"Jinja2==2.11.1",
-		"psutil==5.6.3",
+		"psutil==5.6.6",
 		"sanic==19.12.2",
 		"toml==0.10.0",
 	],
