@@ -1,10 +1,12 @@
+import logging
 import typing
 
 from sanic import Sanic
-from sanic.response import html, json, redirect
+from sanic.response import empty, html, json, redirect
 
-from parentopticon import version
+from parentopticon import db, log, version
 
+LOGGER = logging.getLogger(__name__)
 app = Sanic()
 
 
@@ -14,7 +16,7 @@ def _render(template: str, **kwargs):
 
 @app.route("/")
 async def root(request):
-	limits = app.db_connection.limit_list()
+	limits = db.ProgramGroupLimit.list(app.db_connection)
 	window_weeks = app.db_connection.window_week_list()
 	groups = app.db_connection.group_list()
 	programs = app.db_connection.program_list()
@@ -27,6 +29,17 @@ async def root(request):
 		window_weeks=list(window_weeks),
 	)
 
+
+@app.route("/action", methods=["GET"])
+async def action_list(request):
+	LOGGER.info("Getting list of actions for '%s'", request.args["hostname"])
+	return json([{
+		"type": "warn",
+		"content": "Oh, it's comin down.",
+	},{
+		"type": "kill",
+		"content": 14818,
+	}])
 
 @app.route("/group", methods=["POST"])
 async def group_post(request):
@@ -73,6 +86,13 @@ async def program(request, program_id: int):
 	program_sessions = app.db_connection.program_session_list_by_program(program_id)
 	return _render("program.html", program=program, program_sessions=program_sessions)
 
+@app.route("/program", methods=["GET"])
+def program_list(request):
+	return json({
+		"net.minecraft.client.main.Main": "Minecraft",
+		"minecraft-launcher": "Minecraft",
+	})
+
 @app.route("/program", methods=["POST"])
 async def program_post(request):
 	name = request.form["name"][0]
@@ -91,6 +111,11 @@ async def program_post(request):
 			)
 	return redirect("/program/{}".format(program_id))
 
+
+@app.route("/snapshot", methods=["POST"])
+def program_post(request):
+	LOGGER.info("got a snapshot POST: %s", request.json)
+	return empty()
 
 @app.route("/window", methods=["POST"])
 async def window_post(request):
@@ -118,3 +143,12 @@ async def window_post(request):
 async def window_get(request, window_id: int):
 	window = app.db_connection.window_week_get(window_id)
 	return _render("window.html", window=window)
+
+def run() -> None:
+	log.setup()
+	try:
+		LOGGER.info("Webserver starting.")
+		app.run(host="127.0.0.1", port=13598)
+	except KeyboardInterrupt:
+		LOGGER.info("shutting down due to SIGINT")
+

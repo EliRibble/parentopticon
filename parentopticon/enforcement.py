@@ -2,11 +2,33 @@
 Module for handling enforcement logic.
 """
 import datetime
+from enum import Enum
 from typing import Iterable
 
 from parentopticon import db, ui
 
 
+class ActionType(Enum):
+	# Kill a program
+	kill = "kill"
+	# Show a warning
+	warn = "warn"
+
+class Action:
+	def __init__(self, type_: ActionType, content: str) -> None:
+		self.content = content
+		self.type = type_
+
+def do(action: Action) -> None:
+	"Do whatever the action says to do."
+	if action.type == ActionType.kill:
+		kill(action.content)
+	elif action.type == ActionType.warn:
+		ui.show_alert(action.content)
+	else:
+		raise Exception("This should never happen.")
+
+	
 def get_minutes_left(program_sessions: Iterable[db.ProgramSession], program: db.Program) -> int:
 	"Get the minutes left for a given program, rounded up."
 	# Get all the restrictions that apply to this program

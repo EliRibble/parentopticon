@@ -9,9 +9,9 @@ import typing
 def _xdg_data_home() -> typing.Text:
 	return os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))
 
-def setup() -> None:
+def setup(level: int = logging.INFO) -> None:
 	logger = logging.getLogger()
-	logger.setLevel(logging.INFO)
+	logger.setLevel(level)
 	formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 	stream_handler = logging.StreamHandler()
 	stream_handler.setFormatter(formatter)
