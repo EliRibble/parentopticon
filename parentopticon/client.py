@@ -72,12 +72,15 @@ class Client:
 
 	def snap_and_enforce(self) -> None:
 		"Get a snapshot, enforce limits."
-		process_to_programs = self.get_processes_and_programs()
-		pid_to_program = snapshot.take(process_to_programs)
-		self.post_programs(pid_to_program)
-		actions = self.get_actions()
-		for action in actions:
-			do(action)
+		try:
+			process_to_programs = self.get_processes_and_programs()
+			pid_to_program = snapshot.take(process_to_programs)
+			self.post_programs(pid_to_program)
+			actions = self.get_actions()
+			for action in actions:
+				do(action)
+		except requests.exceptions.ConnectionError as ex:
+			raise SkipLoop("Looks like the remote host isn't responding: {}".format(ex))
 
 	def url(self, path: str, queryargs: Optional[Mapping[str, str]] = None) -> str:
 		if queryargs:
