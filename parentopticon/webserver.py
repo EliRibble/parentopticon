@@ -1,3 +1,4 @@
+import argparse
 import logging
 import typing
 
@@ -145,10 +146,15 @@ async def window_get(request, window_id: int):
 	return _render("window.html", window=window)
 
 def run() -> None:
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-H", "--host", default="0.0.0.0", help="The port/host to bind to.")
+	parser.add_argument("-p", "--port", type=int, default=13598, help="The port to run on.")
+	args = parser.parse_args()
+
 	log.setup()
 	try:
 		LOGGER.info("Webserver starting.")
-		app.run(host="127.0.0.1", port=13598)
+		app.run(host=args.host, port=args.port)
 	except KeyboardInterrupt:
 		LOGGER.info("shutting down due to SIGINT")
 
