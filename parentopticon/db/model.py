@@ -134,6 +134,23 @@ class Model:
 	@classmethod
 	def list(cls,
 		connection: Connection,
+		**kwargs,
+		) -> Iterable["Model"]:
+		"""List rows for this table.
+
+		Args:
+			connection: The DB connection to use.
+			kwargs: column names to values that go into a WHERE clause.
+		Returns:
+			Matching rows as class instances.
+		"""
+		where_statement, bindings = kwargs_to_where_and_bindings(**kwargs)
+		return cls.list_where(connection, where_statement, bindings)
+
+
+	@classmethod
+	def list_where(cls,
+		connection: Connection,
 		where: Optional[str] = None,
 		bindings: Iterable[Any] = None,
 		) -> Iterable["Model"]:
@@ -157,10 +174,8 @@ class Model:
 	@classmethod
 	def search(cls, connection: Connection, **kwargs) -> Optional["Model"]:
 		"""Search for a single row."""
-		where_parts = ["{} = ?".format(k) for k in kwargs.keys()]
-		where = ", ".join(where_parts)
+		where, bindings = kwargs_to_where_and_bindings(**kwargs)
 		select_statement = cls.select_statement(where=where)
-		bindings = list(kwargs.values())
 		rows = connection.execute(select_statement, bindings).fetchall()
 		if len(rows) == 0:
 			return None
@@ -190,3 +205,18 @@ class Model:
 	def truncate_statement(cls) -> str:
 		"Get the statement to truncate the table."
 		return "DELETE FROM {}".format(cls.__name__)
+
+def kwargs_to_where_and_bindings(**kwargs) -> Tuple[Optional[str], List[Any]]:
+	"Turn kwargs into a where statement and matching bindings."
+	if not kwargs:
+		return None, []
+	where_parts = []
+	bindings = []
+	for k, v in kwargs.items():
+		if v is None:
+			where_parts.append("{} IS NULL".format(k))
+		else:
+			where_parts.append("{} = ?".format(k))
+			bindings.append(v)
+	where = ", ".join(where_parts)
+	return where, bindings

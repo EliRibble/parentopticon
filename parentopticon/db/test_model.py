@@ -12,7 +12,7 @@ class ModelTests(test_utilities.DBTestCase):
 		COLUMNS = {
 			"id": ColumnInteger(autoincrement=True, primary_key=True),
 			"count": ColumnInteger(),
-			"name": ColumnText(null=False),
+			"name": ColumnText(null=True),
 		}
 
 	def _makerows(self, names: Optional[List[str]] = None):
@@ -35,7 +35,7 @@ class ModelTests(test_utilities.DBTestCase):
 			"CREATE TABLE IF NOT EXISTS MyTable (",
 			"count INTEGER,",
 			"id INTEGER PRIMARY KEY AUTOINCREMENT,",
-			"name TEXT NOT NULL",
+			"name TEXT",
 			");",
 		))
 		self.assertEqual(result, expected)
@@ -63,10 +63,16 @@ class ModelTests(test_utilities.DBTestCase):
 	def test_list_some(self):
 		"Can we get several rows from the table with a where clause?"
 		rowids = self._makerows()
-		results = ModelTests.MyTable.list(self.db, where="count >= 4")
+		results = ModelTests.MyTable.list_where(self.db, where="count >= 4")
 		self.assertEqual({result.count for result in results}, {4, 6})
 
-	def test_search_none(self):
+	def test_list_with_none(self):
+		"Can we get a list where an item is NULL?"
+		rowids = self._makerows(names=["foo", None, "bar"])
+		results = ModelTests.MyTable.list(self.db, name=None)
+		self.assertEqual({result.count for result in results}, {4})
+
+	def test_search_not_found(self):
 		"Can we search and not find something?"
 		results = ModelTests.MyTable.search(self.db, name="sir-not-appearing")
 		self.assertIs(results, None)
@@ -83,3 +89,10 @@ class ModelTests(test_utilities.DBTestCase):
 		self._makerows(names=["foo", "foo", "bar"])
 		with self.assertRaises(ValueError):
 			ModelTests.MyTable.search(self.db, name="foo")
+
+	def test_search_with_none(self):
+		"Do we properly search for NULL columns?"
+		self._makerows(names=["foo", None, "bar"])
+		results = ModelTests.MyTable.search(self.db, name=None)
+		self.assertEqual(results.name, None)
+		self.assertEqual(results.count, 4)
