@@ -2,7 +2,9 @@
 
 System for monitoring and limiting child accounts on Linux
 
-# Installation (daemon)
+# Installation
+
+## daemon (for computers to watch)
 
 To install on a user account you want to be controlled by parentopticon:
 
@@ -30,7 +32,7 @@ source ve/bin/activate[.fish]
 pip install -e .
 ```
 
-1. Create a supervisord service file
+1. Create a systemd service file
 
 ```
 sudo su <child account>
@@ -66,6 +68,37 @@ systemctl --user status parentopticon
 journalctl --user
 tail ~/.local/share/parentopticon.log
 ```
+
+## Server
+
+This is installation for the server you want to use to control everything.
+
+1. Install necessary packages
+
+```
+sudo apt install python3-dev python3-virtualenv
+```
+
+1. Clone the code
+
+```
+sudo mkdir /usr/local/src/parentopticon
+sudo chown <adult account> /usr/local/src/parentopticon
+cd /usr/local/src
+git clone https://github.com/EliRibble/parentopticon parentopticon
+```
+
+1. Create a virtualenv for it to run in
+
+```
+cd /usr/local/src/parentopticon
+python3 -m virtualenv -p python3 ve
+source ve/bin/activate[.fish]
+pip install -e .
+```
+
+1. Create a systemd service file
+
 
 # Hacking
 
