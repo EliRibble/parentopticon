@@ -11,6 +11,13 @@ LOGGER = logging.getLogger(__name__)
 
 StatementAndBinding = Tuple[str, Iterable[Any]]
 
+def list_program_by_process(connection: Connection) -> Mapping[str, str]:
+	"Get the mapping of processes to their program names."
+	programs = Program.list(connection)
+	program_by_id = {program.id: program.name for program in programs}
+	processes = ProgramProcess.list(connection)
+	return {process.name: program_by_id[process.program] for process in processes}
+
 def program_session_close(connection: Connection, program_session_id: int) -> None:
 	connection.execute(
 		"UPDATE ProgramSession SET end = ? WHERE id = ?",

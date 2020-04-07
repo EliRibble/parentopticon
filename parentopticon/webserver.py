@@ -6,6 +6,8 @@ from sanic import Sanic
 from sanic.response import empty, html, json, redirect
 
 from parentopticon import db, log, version
+from parentopticon.db import tables
+from parentopticon.db.connection import Connection
 
 LOGGER = logging.getLogger(__name__)
 app = Sanic()
@@ -89,10 +91,8 @@ async def program(request, program_id: int):
 
 @app.route("/program", methods=["GET"])
 def program_list(request):
-	return json({
-		"net.minecraft.client.main.Main": "Minecraft",
-		"minecraft-launcher": "Minecraft",
-	})
+	process_by_program = queries.list_program_by_process(app.db_connection)
+	return json(process_by_program)
 
 @app.route("/program", methods=["POST"])
 async def program_post(request):

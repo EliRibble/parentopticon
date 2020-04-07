@@ -7,6 +7,43 @@ from parentopticon.db import queries
 from parentopticon.db.model import ColumnInteger, ColumnText, Model
 from parentopticon.db.tables import Program, ProgramGroup, ProgramProcess, ProgramSession
 
+class ProgramProcessTests(test_utilities.DBTestCase):
+	"Test interactions between programs and processes."
+	def setUp(self):
+		super().setUp()
+		self.programs = [
+			Program.insert(self.db,
+				name = "Minecraft",
+			),
+			Program.insert(self.db,
+				name = "Terraria",
+			),
+		]
+		self.processes = [
+			ProgramProcess.insert(self.db,
+				name = "net.minecraft.client.main.Main",
+				program = self.programs[0],
+			),
+			ProgramProcess.insert(self.db,
+				name = "minecraft-launcher",
+				program = self.programs[0],
+			),
+			ProgramProcess.insert(self.db,
+				name = "terraria.exe",
+				program = self.programs[1],
+			),
+		]
+
+	def test_list_program_by_process(self):
+		"Can we get a list of programs by process?"
+		result = queries.list_program_by_process(self.db)
+		expected = {
+			"net.minecraft.client.main.Main": "Minecraft",
+			"minecraft-launcher": "Minecraft",
+			"terraria.exe": "Terraria",
+		}
+		self.assertEqual(result, expected)
+
 class ProgramSessionTests(test_utilities.DBTestCase):
 	def setUp(self):
 		super().setUp()
