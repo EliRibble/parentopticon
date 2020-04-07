@@ -4,6 +4,8 @@ import logging
 import sqlite3
 from typing import Any, Iterable, List, Mapping, Optional, Tuple
 
+from parentopticon.db.connection import Connection
+
 LOGGER = logging.getLogger(__name__)
 
 StatementAndBinding = Tuple[str, Iterable[Any]]
@@ -96,7 +98,7 @@ class Model:
 		)
 
 	@classmethod
-	def get(cls, connection: "Connection", id_: int) -> "Model":
+	def get(cls, connection: Connection, id_: int) -> "Model":
 		"Get a single row by its ID"
 		select_statement = cls.select_statement(
 			where="id = ?")
@@ -106,7 +108,7 @@ class Model:
 		return cls(**data)
 
 	@classmethod
-	def insert(cls, connection: "Connection", **kwargs) -> int:
+	def insert(cls, connection: Connection, **kwargs) -> int:
 		"Insert a new row into the table. Return rowid."
 		statement, values = cls.insert_statement(**kwargs)
 		return connection.execute_commit_return(statement, values)
@@ -131,7 +133,7 @@ class Model:
 
 	@classmethod
 	def list(cls,
-		connection: "Connection",
+		connection: Connection,
 		where: Optional[str] = None,
 		bindings: Iterable[Any] = None,
 		) -> Iterable["Model"]:
