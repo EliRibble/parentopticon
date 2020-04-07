@@ -1,5 +1,6 @@
 import datetime
 import os
+from typing import List, Optional
 import unittest
 
 from parentopticon.db import test_utilities
@@ -12,6 +13,14 @@ class ModelTests(test_utilities.DBTestCase):
 			"id": ColumnInteger(autoincrement=True, primary_key=True),
 			"count": ColumnInteger(),
 			"name": ColumnText(null=False),
+		}
+
+	def _makerows(self, names: Optional[List[str]] = None):
+		"Make a few rows. Useful for many tests."
+		names = names or ["foo", "bar", "baz"]
+		return {
+			ModelTests.MyTable.insert(self.db, count=(i+1)*2, name=name)
+			for i, name in enumerate(names)
 		}
 
 	def setUp(self):
@@ -47,22 +56,30 @@ class ModelTests(test_utilities.DBTestCase):
 
 	def test_list_all(self):
 		"Can we get several rows from the table?"
-		rowids = {
-			ModelTests.MyTable.insert(self.db, count=2, name="foo"),
-			ModelTests.MyTable.insert(self.db, count=4, name="bar"),
-			ModelTests.MyTable.insert(self.db, count=6, name="baz"),
-		}
+		rowids = self._makerows()
 		results = ModelTests.MyTable.list(self.db)
 		self.assertEqual({result.id for result in results}, rowids)
 
 	def test_list_some(self):
 		"Can we get several rows from the table with a where clause?"
-		rowids = [
-			ModelTests.MyTable.insert(self.db, count=2, name="foo"),
-			ModelTests.MyTable.insert(self.db, count=4, name="bar"),
-			ModelTests.MyTable.insert(self.db, count=6, name="baz"),
-		]
+		rowids = self._makerows()
 		results = ModelTests.MyTable.list(self.db, where="count >= 4")
 		self.assertEqual({result.count for result in results}, {4, 6})
 
+	def test_search_none(self):
+		"Can we search and not find something?"
+		results = ModelTests.MyTable.search(self.db, name="sir-not-appearing")
+		self.assertIs(results, None)
 
+	def test_search_one(self):
+		"Can we search and find a single row?"
+		rowids = self._makerows()
+		results = ModelTests.MyTable.search(self.db, name="foo")
+		self.assertEqual(results.name, "foo")
+		self.assertEqual(results.count, 2)
+
+	def test_search_many(self):
+		"Do we error when we have multiple matches?"
+		self._makerows(names=["foo", "foo", "bar"])
+		with self.assertRaises(ValueError):
+			ModelTests.MyTable.search(self.db, name="foo")

@@ -153,7 +153,25 @@ class Model:
 		for row in rows:
 			data = {k: v for k, v in zip(column_names, row)}
 			yield cls(**data)
-		
+
+	@classmethod
+	def search(cls, connection: Connection, **kwargs) -> Optional["Model"]:
+		"""Search for a single row."""
+		where_parts = ["{} = ?".format(k) for k in kwargs.keys()]
+		where = ", ".join(where_parts)
+		select_statement = cls.select_statement(where=where)
+		bindings = list(kwargs.values())
+		rows = connection.execute(select_statement, bindings).fetchall()
+		if len(rows) == 0:
+			return None
+		elif len(rows) == 1:
+			row = rows[0]
+			column_names = [k for k, _ in cls.columns_sorted()]
+			data = {k: v for k, v in zip(column_names, row)}
+			return cls(**data)
+		else:
+			raise ValueError("Expected to find at most one row, found {}".format(len(rows)))
+
 	@classmethod
 	def select_statement(cls, where=None) -> str:
 		"""Get the SQL statement for selecting a row from this table.
