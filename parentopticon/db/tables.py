@@ -61,6 +61,7 @@ class ProgramSession(Model):
 	COLUMNS = {
 		"id": ColumnInteger(autoincrement=True, primary_key=True),
 		"end": ColumnDatetime(null=True),
+		"pids": ColumnText(null=False),
 		"program": ColumnForeignKey(Program),
 		"start": ColumnDatetime(null=False),
 	}
