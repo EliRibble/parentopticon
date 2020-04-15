@@ -115,7 +115,12 @@ async def program_post(request):
 
 @app.route("/snapshot", methods=["POST"])
 def program_post(request):
+	"Handle a client POSTing its currently running programs"
 	LOGGER.info("got a snapshot POST: %s", request.json)
+	elapsed_seconds = request.json["elapsed_seconds"]
+	hostname = request.json["hostname"]
+	pid_to_program = request.json["programs"]
+	queries.snapshot_store(hostname, elapsed_seconds, pid_to_program)
 	return empty()
 
 @app.route("/window", methods=["POST"])

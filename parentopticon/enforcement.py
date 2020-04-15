@@ -5,8 +5,10 @@ import datetime
 from enum import Enum
 from typing import Iterable
 
-from parentopticon import db, ui
-
+from parentopticon import ui
+from parentopticon.db import queries
+from parentopticon.db.connection import Connection
+from parentopticon.db.tables import Program, ProgramSession
 
 class ActionType(Enum):
 	# Kill a program
@@ -29,7 +31,7 @@ def do(action: Action) -> None:
 		raise Exception("This should never happen.")
 
 	
-def get_minutes_left(program_sessions: Iterable[db.ProgramSession], program: db.Program) -> int:
+def get_minutes_left(program_sessions: Iterable[ProgramSession], program: Program) -> int:
 	"Get the minutes left for a given program, rounded up."
 	# Get all the restrictions that apply to this program
 	window_week = program.group.window_week
@@ -39,7 +41,7 @@ def get_minutes_left(program_sessions: Iterable[db.ProgramSession], program: db.
 	limit_minutes = get_limit_minutes_left(program_sessions, program)
 
 
-def get_limit_minutes_left(program_sessions: Iterable[db.ProgramSession], program: db.Program) -> int:
+def get_limit_minutes_left(program_sessions: Iterable[ProgramSession], program: Program) -> int:
 	"Get the minutes left for a program limit."
 	now = datetime.datetime.now()
 	limit = program.group.limit
@@ -67,7 +69,7 @@ def get_limit_minutes_left(program_sessions: Iterable[db.ProgramSession], progra
 	return min((left_today, left_this_week, left_this_month))
 
 
-def get_program_sessions_current(db_connection: db.Connection) -> Iterable[db.ProgramSession]:
+def get_program_sessions_current(connection: Connection) -> Iterable[ProgramSession]:
 	"""Get the program sessions that are interesting to enforcement.
 
 	This includes all sessions, opened and closed, since the start
@@ -75,7 +77,7 @@ def get_program_sessions_current(db_connection: db.Connection) -> Iterable[db.Pr
 	open sessions.
 	"""
 	now = datetime.datetime.now()
-	program_sessions_open = list(db_connection.program_session_list_open())
+	program_sessions_open = list(ProgramSession.list(connection, end=None))
 	month_start = datetime.datetime(
 		year = now.year,
 		month = now.month,
@@ -94,10 +96,10 @@ def get_program_sessions_current(db_connection: db.Connection) -> Iterable[db.Pr
 		second = 0,
 	)
 	earliest = min(month_start, week_start)
-	program_sessions_past = list(db_connection.program_session_list_since(earliest))
+	program_sessions_past = list(queries.program_session_list_since(connection, earliest))
 	return program_sessions_past + program_sessions_open
 
-def go(db_connection: db.Connection) -> None:
+def go(db_connection: Connection) -> None:
 	"Check enforcement, give warnings, shutdown programs."
 	# Get all of the open sessions - if there are no
 	# open sessions there's nothing to enforce.
@@ -126,9 +128,9 @@ def go(db_connection: db.Connection) -> None:
 				"I've killed {}. You may have lost progress/work/data.\n"
 				"Next time exit cleanly yourself.".format(ops.program.name))
 
-def kill(program: db.Program) -> None:
+def kill(program: Program) -> None:
 	"Forcefully kill the program."
 	
 			
-def _total_minutes(program_sessions: Iterable[db.ProgramSession]) -> int:
+def _total_minutes(program_sessions: Iterable[ProgramSession]) -> int:
 	"Get total minutes consumed by the given program sessions."

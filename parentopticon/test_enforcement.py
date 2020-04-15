@@ -3,7 +3,9 @@ import unittest
 
 import freezegun
 
-from parentopticon import db, enforcement, test_db
+from parentopticon import enforcement
+from parentopticon.db import test_utilities
+from parentopticon.db.tables import Program, ProgramGroup, ProgramSession
 
 class GetLimitMinutesLeft(unittest.TestCase):
 	"Test enforcement.get_limit_minutes_left"
@@ -39,38 +41,42 @@ class GetLimitMinutesLeft(unittest.TestCase):
 			processes = ["java"],
 		)
 		
-class GetProgramSessionsCurrentTests(test_db.DBTestCase):
+class GetProgramSessionsCurrentTests(test_utilities.DBTestCase):
 	"Test enforcement.get_program_sessions_current."
 	def setUp(self):
 		super().setUp()
-		self.group_id = self.db.group_create("games")
+		self.group_id = test_utilities.make_group(self.db)
 		self.programs = [
-			self.db.program_create("Minecraft", self.group_id),
-			self.db.program_create("Terraria", self.group_id),
+			Program.insert(self.db, name="Minecraft", program_group=self.group_id),
+			Program.insert(self.db, name="Terraria", program_group=self.group_id),
 		]
 
 	@freezegun.freeze_time("2020-02-02 11:00:00")
 	def test_week_split(self):
 		"Can we capture time spent this week outside this month?"
-		now = datetime.datetime
-
 		# program session for this week, but not this month
-		self.db.program_session_create(
+		ProgramSession.insert(
+			self.db,
 			end = datetime.datetime(2020, 2, 1, 10, 0, 0),
+			pids = "",
+			program = self.programs[0],
 			start = datetime.datetime(2020, 2, 1, 9, 10, 0),
-			program_id = self.programs[0],
 		)
 		# program session last month, last week
-		self.db.program_session_create(
+		ProgramSession.insert(
+			self.db,
 			end = datetime.datetime(2020, 1, 25, 10, 0, 0),
+			pids = "",
+			program = self.programs[1],
 			start = datetime.datetime(2020, 1, 25, 9, 0, 0),
-			program_id = self.programs[1],
 		)
 		# program session earlier today
-		self.db.program_session_create(
+		ProgramSession.insert(
+			self.db,
 			end = datetime.datetime(2020, 2, 2, 10, 0, 0),
+			pids = "",
+			program = self.programs[1],
 			start = datetime.datetime(2020, 2, 2, 9, 0, 0),
-			program_id = self.programs[1],
 		)
 		result = enforcement.get_program_sessions_current(self.db)
 		self.assertEqual(len(result), 2)

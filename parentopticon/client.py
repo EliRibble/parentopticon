@@ -59,10 +59,11 @@ class Client:
 			raise SkipLoop("Failed to get interesting processes and programs: {}.".format(response.text))
 		return response.json()
 
-	def post_programs(self, pid_to_program: Mapping[int, str]) -> None:
+	def post_programs(self, pid_to_program: Mapping[int, str], elapsed_seconds: int) -> None:
 		"Send the programs that have been running."
 		url = self.url("/snapshot")
 		data = {
+			"elapsed_seconds": elapsed_seconds,
 			"hostname": self.hostname,
 			"programs": pid_to_program,
 		}
@@ -70,12 +71,12 @@ class Client:
 		if not response.ok:
 			raise SkipLoop("Failed to send snapshot: {}".format(response.text))
 
-	def snap_and_enforce(self) -> None:
+	def snap_and_enforce(self, elapsed_seconds: int) -> None:
 		"Get a snapshot, enforce limits."
 		try:
 			process_to_programs = self.get_processes_and_programs()
 			pid_to_program = snapshot.take(process_to_programs)
-			self.post_programs(pid_to_program)
+			self.post_programs(pid_to_program, elapsed_seconds)
 			actions = self.get_actions()
 			for action in actions:
 				do(action)

@@ -30,10 +30,12 @@ def main() -> None:
 	my_client = client.Client(args.host)
 	LOGGER.info("Parentopticon daemon starting.")
 	try:
+		last_success = time.time()
 		while True:
 			start = time.time()
 			try:
-				my_client.snap_and_enforce()
+				my_client.snap_and_enforce(time.time() - last_success)
+				last_success = time.time()
 			except client.SkipLoop as ex:
 				LOGGER.warning("Skipping the loop. %s", ex)
 			end = time.time()
