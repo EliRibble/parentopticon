@@ -47,17 +47,7 @@ class ProgramProcessTests(test_utilities.DBTestCase):
 class ProgramSessionTests(test_utilities.DBTestCase):
 	def setUp(self):
 		super().setUp()
-		self.group_id = ProgramGroup.insert(self.db,
-			minutes_monday=0,
-			minutes_tuesday=0,
-			minutes_wednesday=0,
-			minutes_thursday=0,
-			minutes_friday=0,
-			minutes_saturday=0,
-			minutes_sunday=0,
-			minutes_weekly=0,
-			minutes_monthly=0,
-			name="games")
+		self.group_id = test_utilities.make_group(self.db)
 		self.program_id = Program.insert(
 			self.db,
 			name="Minecraft",
@@ -69,8 +59,9 @@ class ProgramSessionTests(test_utilities.DBTestCase):
 		program_session_id = ProgramSession.insert(
 			self.db,
 			end = None,
-			start = datetime.datetime.now(),
+			pids = "",
 			program = self.program_id,
+			start = datetime.datetime.now(),
 		)
 		program_session = ProgramSession.get(self.db, program_session_id)
 		self.assertEqual(program_session.end, None)
@@ -82,57 +73,54 @@ class ProgramSessionTests(test_utilities.DBTestCase):
 
 	def test_session_list_since(self):
 		"Can we list sessions since an arbitrary date?"
-		queries.program_session_create(
+		ProgramSession.insert(
 			self.db,
 			end = None,
-			program_id = 1,
+			pids = "",
+			program = self.program_id,
 			start = datetime.datetime(2020, 3, 1),
 		)
-		queries.program_session_create(
+		ProgramSession.insert(
 			self.db,
 			end = None,
-			program_id = 2,
+			pids = "",
+			program = self.program_id,
 			start = datetime.datetime(2020, 2, 1),
 		)
 		moment = datetime.datetime(2020, 2, 14, 1, 0, 0)
 		results = list(queries.program_session_list_since(self.db, moment))
 		self.assertEqual(len(results), 1)
-		self.assertEqual(results[0].program_id, 1)
+		self.assertEqual(results[0].program_id, self.program_id)
 
 	def test_session_list_open(self):
 		"Can we list all the sessions that are still open?"
 		results = list(queries.program_session_list_open(self.db))
 		self.assertEqual(len(results), 0)
-		queries.program_session_create(
+		ProgramSession.insert(
 			self.db,
 			end = None,
-			program_id = 1,
+			pids = "",
+			program = self.program_id,
 			start = datetime.datetime(2020, 3, 1),
 		)
-		queries.program_session_create(
+		ProgramSession.insert(
 			self.db,
 			end = datetime.datetime(2020, 3, 3),
-			program_id = 2,
-			start = datetime.datetime(2020, 3, 2),
+			pids = "",
+			program = self.program_id,
+			start = datetime.datetime(2020, 3, 1),
 		)
 		results = list(queries.program_session_list_open(self.db))
 		self.assertEqual(len(results), 1)
-		self.assertEqual(results[0].program_id, 1)
+		self.assertEqual(results[0].program_id, self.program_id)
 
-	def test_session_ensure_exists_new(self):
-		"Can we create a session when one doesn't already exist?"
-		results = queries.program_session_ensure_exists(self.db, self.program_id)
-		program_session = queries.program_session_get_open(self.db, self.program_id)
-		self.assertEqual(program_session.id_, results)
-
-	def test_session_ensure_exists_old(self):
-		"Can we return a session when it already exists?"
-		program_session_id = queries.program_session_create(
+	def test_session_create_or_add_create(self):
+		"Can we create a session when one does not exist?"
+		program_session_id = queries.program_session_create_or_add(
 			self.db,
-			end = None,
-			start = datetime.datetime.now(),
-			program_id = self.program_id,
+			elapsed_seconds = 0,
+			program_name = "Minecraft",
+			pids = [],
 		)
-		results = queries.program_session_ensure_exists(self.db, self.program_id)
-		self.assertEqual(program_session_id, results)
-	
+		results = ProgramSession.get(self.db, program_session_id)
+		self.assertEqual(results.program, self.program_id)
