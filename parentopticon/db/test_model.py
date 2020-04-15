@@ -54,6 +54,11 @@ class ModelTests(test_utilities.DBTestCase):
 		self.assertEqual(result.count, 3)
 		self.assertEqual(result.name, "foobar")
 
+	def test_get_none(self):
+		"Can we get None when the row does not exist?"
+		result = ModelTests.MyTable.get(self.db, -1)
+		self.assertIs(result, None)
+
 	def test_list_all(self):
 		"Can we get several rows from the table?"
 		rowids = self._makerows()

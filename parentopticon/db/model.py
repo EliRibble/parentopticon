@@ -98,11 +98,13 @@ class Model:
 		)
 
 	@classmethod
-	def get(cls, connection: Connection, id_: int) -> "Model":
+	def get(cls, connection: Connection, id_: int) -> Optional["Model"]:
 		"Get a single row by its ID"
 		select_statement = cls.select_statement(
 			where="id = ?")
 		row = connection.execute(select_statement, (id_,)).fetchone()
+		if row is None:
+			return row
 		column_names = [k for k, _ in cls.columns_sorted()]
 		data = {k: v for k, v in zip(column_names, row)}
 		return cls(**data)
