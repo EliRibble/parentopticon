@@ -220,5 +220,5 @@ def kwargs_to_where_and_bindings(**kwargs) -> Tuple[Optional[str], List[Any]]:
 		else:
 			where_parts.append("{} = ?".format(k))
 			bindings.append(v)
-	where = ", ".join(where_parts)
+	where = " AND ".join(where_parts)
 	return where, bindings
