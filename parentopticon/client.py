@@ -98,7 +98,10 @@ class Client:
 def do(action: Action) -> None:
 	"Do whatever the action says to do."
 	if action.type == ActionType.kill:
-		os.kill(int(action.content), signal.SIGINT)
+		try:
+			os.kill(int(action.content), signal.SIGINT)
+		except ProcessLookupError as ex:
+			LOGGER.warning("Failed to kill '%s': %s", action.content, ex)
 	elif action.type == ActionType.warn:
 		ui.show_alert("Thus saith dad", action.content)
 	else:
