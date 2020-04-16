@@ -5,8 +5,8 @@ import typing
 from sanic import Sanic
 from sanic.response import empty, html, json, redirect
 
-from parentopticon import db, log, version
-from parentopticon.db import tables
+from parentopticon import db, jinja_env, log, version
+from parentopticon.db import queries, tables
 from parentopticon.db.connection import Connection
 
 LOGGER = logging.getLogger(__name__)
@@ -149,6 +149,16 @@ async def window_post(request):
 async def window_get(request, window_id: int):
 	window = app.db_connection.window_week_get(window_id)
 	return _render("window.html", window=window)
+
+@app.listener("after_server_start")
+async def on_server_start(app, loop) -> None:
+	"""Handle server start and track our background task."""
+	app.db_connection = Connection()
+	app.db_connection.connect()
+	tables.create_all(app.db_connection)
+
+	app.jinja_env = jinja_env.create()
+	LOGGER.info("Server start hook complete")
 
 def run() -> None:
 	parser = argparse.ArgumentParser()
