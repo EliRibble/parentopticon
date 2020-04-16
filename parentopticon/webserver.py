@@ -20,6 +20,7 @@ def _render(template: str, **kwargs):
 @app.route("/action", methods=["GET"])
 async def action_list(request):
 	LOGGER.info("Getting list of actions for '%s'", request.args["hostname"])
+	return json([])
 	return json([{
 		"type": "warn",
 		"content": "Oh, it's comin down.",
