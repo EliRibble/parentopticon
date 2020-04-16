@@ -58,9 +58,32 @@ async def limit_get(request, limit_id: int):
 
 @app.route("/program/<program_id:int>", methods=["GET"])
 async def program(request, program_id: int):
-	program = app.db_connection.program_get(program_id)
-	program_sessions = app.db_connection.program_session_list_by_program(program_id)
-	return _render("program.html", program=program, program_sessions=program_sessions)
+	program = tables.Program.get(app.db_connection, program_id)
+	if not program:
+		return redirect("/program")
+	program_groups = list(tables.ProgramGroup.list(app.db_connection))
+	# program_sessions = app.db_connection.program_session_list_by_program(program_id)
+	return _render("program.html", program=program, program_groups=program_groups)
+
+@app.route("/program", methods=["GET"])
+async def programs_get(request):
+	programs = list(tables.Program.list(app.db_connection))
+	program_groups = list(tables.ProgramGroup.list(app.db_connection))
+	return _render("programs.html",
+		programs = programs,
+		program_groups = program_groups,
+	)
+
+@app.route("/program", methods=["POST"])
+async def programs_post(request):
+	name = request.form["name"][0]
+	program_group = int(request.form["program_group"][0])
+	program_id = tables.Program.insert(app.db_connection,
+		name = name,
+		program_group = program_group,
+	)
+	return redirect("/program/{}".format(program_id))
+
 
 @app.route("/program-group/<program_group_id:int>", methods=["GET"])
 async def program_group_get(request, program_group_id: int):
@@ -99,30 +122,6 @@ async def program_groups_post(request):
 @app.route("/program-group", methods=["GET"])
 async def program_groups_get(request):
 	return _render("program-groups.html")
-
-@app.route("/program", methods=["GET"])
-def program_list(request):
-	process_by_program = queries.list_program_by_process(app.db_connection)
-	return json(process_by_program)
-
-@app.route("/program", methods=["POST"])
-async def program_post(request):
-	name = request.form["name"][0]
-	group = int(request.form["group"][0])
-	program_id = app.db_connection.program_create(
-		name = name,
-		group = group,
-	)
-	processes_str = request.form["processes"][0]
-	if processes_str:
-		for process in processes_str.split(","):
-			process = process.strip()
-			app.db_connection.process_create(
-				name = process,
-				program = program_id,
-			)
-	return redirect("/program/{}".format(program_id))
-
 
 @app.route("/snapshot", methods=["POST"])
 def program_post(request):
