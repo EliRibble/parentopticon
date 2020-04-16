@@ -196,3 +196,5 @@ def create_all(connection: Connection):
 	connection.cursor.execute(ProgramSession.create_statement())
 	connection.cursor.execute(WindowWeekDaySpan.create_statement())
 	connection.cursor.execute(WindowWeekDaySpanOverride.create_statement())
+	connection.commit()
+	LOGGER.info("DB tables exist.")
