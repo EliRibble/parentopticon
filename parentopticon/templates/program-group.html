@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Parentopticon - Program Group {{program_group.name}}</title>{% endblock %}
+{% block content %}
+<h1>Group '{{program_group.name}}'</h1>
+<form action="/program-group/{{program_group.id}}" method="PUT">
+	<label for="name">Name:</label>
+	<input type="text" name="name" value="{{program_group.name}}"/>
+	<label for="minutes_monday">Minutes Monday:</label>
+	<input type="number" max="1440" min="-1" name="minutes_monday" value="{{program_group.minutes_monday}}"/>
+	<label for="minutes_tuesday">Minutes Tuesday:</label>
+	<input type="number" max="1440" min="-1" name="minutes_tuesday" value="{{program_group.minutes_tuesday}}"/>
+	<label for="minutes_wednesday">Minutes Wednesday:</label>
+	<input type="number" max="1440" min="-1" name="minutes_wednesday" value="{{program_group.minutes_wednesday}}"/>
+	<label for="minutes_thursday">Minutes Thursday:</label>
+	<input type="number" max="1440" min="-1" name="minutes_thursday" value="{{program_group.minutes_thursday}}"/>
+	<label for="minutes_friday">Minutes Friday:</label>
+	<input type="number" max="1440" min="-1" name="minutes_friday" value="{{program_group.minutes_friday}}"/>
+	<label for="minutes_saturday">Minutes Saturday:</label>
+	<input type="number" max="1440" min="-1" name="minutes_saturday" value="{{program_group.minutes_saturday}}"/>
+	<label for="minutes_sunday">Minutes Sunday:</label>
+	<input type="number" max="1440" min="-1" name="minutes_sunday" value="{{program_group.minutes_sunday}}"/>
+
+	<label for="minutes_weekly">Minutes Weekly:</label>
+	<input type="number" max="10080" min="-1" name="minutes_weekly" value="{{program_group.minutes_weekly}}"/>
+	<label for="minutes_monthly">Minutes Monthly:</label>
+	<input type="number" max="44640" min="-1" name="minutes_monthly" value="{{program_group.minutes_monthly}}"/>
+
+	<input type="submit" value="Update"/>
+</form>
+{% endblock %}

@@ -6,129 +6,33 @@
 <h1>Parentopticon Main Page</h1>
 
 <h2>Open Program Sessions</h2>
-{% if program_sessions %}
+{% if open_sessions %}
 <table>
-  <tr><th>Name</th><th>Start</th></tr>
-  {% for program_session in program_sessions %}
-    <tr>
-	  <td>{{ program_session.program.name }}</td>
-	  <td>{{ program_session.start | humanize }}</td>
-    </tr>
-  {% endfor %}
-</table>
-{% else %}
-  <p>None yet.</p>
-{% endif %}
-
-<h2>Limits</h2>
-{% if limits %}
-<table>
-  <tr><th>Name</th></tr>
-  {% for limit in limits %}
-    <tr><td><a href="/limit/{{ limit.id }}">{{ limit.name }}</a></td></tr>
-  {% endfor %}
-</table>
-{% else %}
-<p>None yet.</p>
-{% endif %}
-<form method="POST" action="/limit">
-  <label for="name">Name:</label>
-  <input type="text" name="name"/>
-  <label for="daily">Daily:</label>
-  <input type="number" min="0" max="24" name="daily"/>
-  <label for="wekly">Weekly:</label>
-  <input type="number" min="0" max="168" name="weekly"/>
-  <label for="monthly">Monthly:</label>
-  <input type="number" min="0" max="744" name="monthly"/>
-  <input type="submit"/>
-</form>
-
-
-<h2>Windows</h2>
-{% if window_weeks %}
-<table>
-  <tr><th>Name</th></tr>
-  {% for window_week in window_weeks %}
-    <tr><td><a href="/window/{{ window_week.id }}">{{ window_week.name }}</a></td></tr>
-  {% endfor %}
-</table>
-{% else %}
-<p>None yet.</p>
-{% endif %}
-<form method="POST" action="/window">
-  <label for="name">Name:</label>
-  <input type="text" name="name"/>
-  <label for="monday">Monday:</label>
-  <input type="text" name="monday"/>
-  <label for="tuesday">Tuesday:</label>
-  <input type="text" name="tuesday"/>
-  <label for="wednesday">Wednesday:</label>
-  <input type="text" name="wednesday"/>
-  <label for="thursday">Thursday:</label>
-  <input type="text" name="thursday"/>
-  <label for="friday">Friday:</label>
-  <input type="text" name="friday"/>
-  <label for="saturday">Saturday:</label>
-  <input type="text" name="saturday"/>
-  <label for="sunday">Sunday:</label>
-  <input type="text" name="sunday"/>
-  <input type="submit"/>
-</form>
-
-
-<h2>Groups</h2>
-{% if groups %}
-<table>
-  <tr><th>Name</th></tr>
-  {% for group in groups %}
-    <tr><td><a href="/group/{{ group.id }}">{{ group.name }}</a></td></tr>
-  {% endfor %}
-</table>
-{% else %}
-<p>None yet.</p>
-{% endif %}
-<form method="POST" action="/group">
-  <label for="name">Name:</label>
-  <input type="text" name="name"/>
-  <label for="limits">Limits:</label>
-  <select name="limit" {% if not limits %}disabled{% endif %}>
-    <option value="0" default>None</option>
-    {% for limit in limits %}
-	<option value="{{ limit.id }}">{{ limit.name }}</option>
+	<tr><th>Name</th><th>Start</th></tr>
+	{% for session in open_sessions %}
+	<tr>
+		<td>{{ session.program }}</td>
+		<td>{{ session.start | humanize }}</td>
+	</tr>
 	{% endfor %}
-  </select>
-  <label for="window_week">Window Week:</label>
-  <select name="window_week" {% if not window_weeks %}disabled{% endif %}>
-    <option value="0" default>None</option>
-    {% for window_week in window_weeks %}
-	<option value="{{ window_week.id }}">{{ window_week.name }}</option>
-	{% endfor %}
-  </select>
-  <input type="submit"/>
-</form>
-
-<h2>Programs</h2>
-{% if programs %}
-  <table>
-    <tr><th>Name</th></tr>
-  {% for program in programs %}
-  	<tr><td><a href="/program/{{ program.id }}">{{ program.name }}</td></tr>
-  {% endfor %}
-  </table>
+</table>
 {% else %}
-<p>None yet.</p>
+	<p>None yet.</p>
 {% endif %}
-<form method="POST" action="/program">
-  <label for="name">Name:</label>
-  <input type="text" name="name"/>
-  <label for="processes">Processes:</label>
-  <input type="text" name="processes"/>
-  <select name="group" {% if not groups %}disabled{% endif %}>
-    {% for group in groups %}
-	<option value="{{ group.id }}">{{ group.name }}</option>
+
+<h2>Closed Program Sessions</h2>
+{% if closed_sessions %}
+<table>
+	<tr><th>Name</th><th>Start</th></tr>
+	{% for session in closed_sessions %}
+	<tr>
+		<td>{{ session.program }}</td>
+		<td>{{ session.start | humanize }}</td>
+	</tr>
 	{% endfor %}
-  </select>
-  <input type="submit" {% if not groups %}disabled{% endif %}/>
-</form>
+</table>
+{% else %}
+	<p>None yet.</p>
+{% endif %}
 </body>
 </html>

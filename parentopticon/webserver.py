@@ -17,22 +17,6 @@ def _render(template: str, **kwargs):
 	return html(app.jinja_env.get_template(template).render(**kwargs))
 
 
-@app.route("/")
-async def root(request):
-	limits = db.ProgramGroupLimit.list(app.db_connection)
-	window_weeks = app.db_connection.window_week_list()
-	groups = app.db_connection.group_list()
-	programs = app.db_connection.program_list()
-	program_sessions = app.db_connection.program_session_list_open()
-	return _render("index.html",
-		groups=list(groups),
-		limits=list(limits),
-		program_sessions=program_sessions,
-		programs=programs,
-		window_weeks=list(window_weeks),
-	)
-
-
 @app.route("/action", methods=["GET"])
 async def action_list(request):
 	LOGGER.info("Getting list of actions for '%s'", request.args["hostname"])
@@ -44,25 +28,13 @@ async def action_list(request):
 		"content": 14818,
 	}])
 
-@app.route("/group", methods=["POST"])
-async def group_post(request):
-	name = request.form["name"][0]
-	limit = int(request.form["limit"][0])
-	window_week = int(request.form["window_week"][0])
-	limit = None if limit == -1 else limit
-	window_week = None if window_week == -1 else window_week
-	group_id = app.db_connection.group_create(
-		name = name,
-		limit = limit,
-		window_week = window_week,
+@app.route("/config", methods=["GET"])
+async def config_get(request):
+	program_groups = list(tables.ProgramGroup.list(app.db_connection))
+	LOGGER.info("Program groups: %s", program_groups)
+	return _render("config.html",
+		program_groups=program_groups,
 	)
-	return redirect("/group/{}".format(group_id))
-
-
-@app.route("/group/<group_id:int>", methods=["GET"])
-async def group_get(request, group_id: int):
-	group = app.db_connection.group_get(group_id)
-	return _render("group.html", group=group)
 
 @app.route("/limit", methods=["POST"])
 async def limit_post(request):
@@ -88,6 +60,44 @@ async def program(request, program_id: int):
 	program = app.db_connection.program_get(program_id)
 	program_sessions = app.db_connection.program_session_list_by_program(program_id)
 	return _render("program.html", program=program, program_sessions=program_sessions)
+
+@app.route("/program-group/<program_group_id:int>", methods=["GET"])
+async def program_group_get(request, program_group_id: int):
+	pg = tables.ProgramGroup.get(app.db_connection, program_group_id)
+	if not pg:
+		return redirect("/program-group")
+	return _render("program-group.html", program_group=pg)
+
+@app.route("/program-group", methods=["POST"])
+async def program_groups_post(request):
+	name = request.form["name"][0]
+	minutes_monday = int(request.form["minutes_monday"][0])
+	minutes_tuesday = int(request.form["minutes_tuesday"][0])
+	minutes_wednesday = int(request.form["minutes_wednesday"][0])
+	minutes_thursday = int(request.form["minutes_thursday"][0])
+	minutes_friday = int(request.form["minutes_friday"][0])
+	minutes_saturday = int(request.form["minutes_saturday"][0])
+	minutes_sunday = int(request.form["minutes_sunday"][0])
+	minutes_weekly = int(request.form["minutes_weekly"][0])
+	minutes_monthly = int(request.form["minutes_monthly"][0])
+	program_group_id = tables.ProgramGroup.insert(app.db_connection,
+		name = name,
+		minutes_monday = minutes_monday,
+		minutes_tuesday = minutes_tuesday,
+		minutes_wednesday = minutes_wednesday,
+		minutes_thursday = minutes_thursday,
+		minutes_friday = minutes_friday,
+		minutes_saturday = minutes_saturday,
+		minutes_sunday = minutes_sunday,
+		minutes_weekly = minutes_weekly,
+		minutes_monthly = minutes_monthly,
+	)
+	return redirect("/program-group/{}".format(program_group_id))
+
+
+@app.route("/program-group", methods=["GET"])
+async def program_groups_get(request):
+	return _render("program-groups.html")
 
 @app.route("/program", methods=["GET"])
 def program_list(request):
@@ -117,11 +127,21 @@ async def program_post(request):
 def program_post(request):
 	"Handle a client POSTing its currently running programs"
 	LOGGER.info("got a snapshot POST: %s", request.json)
-	elapsed_seconds = request.json["elapsed_seconds"]
+	elapsed_seconds = request.json.get("elapsed_seconds", 0)
 	hostname = request.json["hostname"]
 	pid_to_program = request.json["programs"]
 	queries.snapshot_store(hostname, elapsed_seconds, pid_to_program)
 	return empty()
+
+@app.route("/")
+async def root(request):
+	open_sessions = queries.program_session_list_open(app.db_connection)
+	closed_sessions = tables.ProgramSession.list(app.db_connection)
+	return _render("index.html",
+		closed_sessions=closed_sessions,
+		open_sessions=open_sessions,
+	)
+
 
 @app.route("/window", methods=["POST"])
 async def window_post(request):
