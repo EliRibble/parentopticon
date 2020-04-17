@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import logging
 import typing
 
@@ -20,15 +21,13 @@ def _render(template: str, **kwargs):
 
 @app.route("/action", methods=["GET"])
 async def action_list(request):
-	LOGGER.info("Getting list of actions for '%s'", request.args["hostname"])
-	return json([])
+	hostname = request.args["hostname"][0]
+	username = request.args["username"][0]
+	actions = queries.actions_for_username(app.db_connection, hostname, username)
 	return json([{
-		"type": "warn",
-		"content": "Oh, it's comin down.",
-	},{
-		"type": "kill",
-		"content": 14818,
-	}])
+		"content": action.content,
+		"type": action.type,
+	} for action in actions])
 
 @app.route("/config", methods=["GET"])
 async def config_get(request):
@@ -40,6 +39,28 @@ async def config_get(request):
 		program_groups=program_groups,
 		program_sessions=program_sessions,
 	)
+
+@app.route("/config/one-time-message", methods=["GET"])
+async def config_one_time_messages_get(request):
+	usernames = queries.usernames(app.db_connection)
+	one_time_messages = tables.OneTimeMessage.list(app.db_connection)
+	return _render("one-time-messages.html",
+		one_time_messages = one_time_messages,
+		usernames=usernames
+	)
+
+@app.route("/config/one-time-message", methods=["POST"])
+async def config_one_time_message_post(request):
+	content = request.form["content"][0]
+	username = request.form["username"][0]
+	program_id = tables.OneTimeMessage.insert(app.db_connection,
+		content = content,
+		hostname = None,
+		created = datetime.datetime.now(),
+		sent = None,
+		username = username,
+	)
+	return redirect("/config/one-time-message")
 
 @app.route("/config/program/<program_id:int>", methods=["GET"])
 async def config_program_get(request, program_id: int):

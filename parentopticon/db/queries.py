@@ -5,12 +5,36 @@ import sqlite3
 from typing import Any, Iterable, List, Mapping, Optional, Tuple
 
 from parentopticon.db.connection import Connection
-from parentopticon.db.tables import Process, Program, ProgramGroup, ProgramProcess, ProgramSession, WindowWeek, WindowWeekDay
+from parentopticon.db.tables import OneTimeMessage, Process, Program, ProgramGroup, ProgramProcess, ProgramSession, WindowWeek, WindowWeekDay
 
 LOGGER = logging.getLogger(__name__)
 
 StatementAndBinding = Tuple[str, Iterable[Any]]
 
+Action = collections.namedtuple("Action", (
+	"content",
+	"type",
+))
+def actions_for_username(connection: Connection, hostname: str, username: str) -> Iterable[Action]:
+	LOGGER.info("Getting list of actions for %s on '%s'", username, hostname)
+	one_time_messages = list(OneTimeMessage.list(
+		connection,
+		username=username,
+		sent=None,
+	))
+	LOGGER.info("Got %d one-time messages for %s", len(one_time_messages), username)
+	for otm in one_time_messages:
+		OneTimeMessage.update(
+			connection,
+			otm.id,
+			hostname=hostname,
+			sent=datetime.datetime.now(),
+		)
+	return [Action(
+		content=otm.content,
+		type="warn",
+	) for otm in one_time_messages]
+	
 def list_program_by_process(connection: Connection) -> Mapping[str, str]:
 	"Get the mapping of processes to their program names."
 	programs = Program.list(connection)
