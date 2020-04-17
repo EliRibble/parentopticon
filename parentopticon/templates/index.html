@@ -5,9 +5,8 @@
 <body>
 <h1>Parentopticon Main Page</h1>
 
-<h2>Users</h2>
 {% for user, groups_to_status in user_to_status.items() %}
-	<h3>{{ user }}</h3>
+	<h2>{{ user }}</h2>
 	<table>
 		<tr><th>Program Group</th><th>Minutes Used</th><th>Minutes Remaining</th></tr>
 		{% for groupname, status in groups_to_status.items() %}
