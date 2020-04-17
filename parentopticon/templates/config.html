@@ -8,25 +8,25 @@
 <table>
 	<tr><th>Name</th></tr>
 	{% for pg in program_groups %}
-		<tr><td><a href="/group/{{ pg.id }}">{{ pg.name }}</a></td></tr>
+		<tr><td><a href="/config/program-group/{{ pg.id }}">{{ pg.name }}</a></td></tr>
 	{% endfor %}
 </table>
 {% else %}
 <p>None yet.</p>
 {% endif %}
 
-<a href="/program-group">Make more</a>
+<a href="/config/program-group">Make more</a>
 
 <h2>Programs</h2>
 {% if programs %}
 	<table>
 		<tr><th>Name</th></tr>
 		{% for program in programs %}
-			<tr><td><a href="/program/{{ program.id }}">{{ program.name }}</td></tr>
+			<tr><td><a href="/config/program/{{ program.id }}">{{ program.name }}</td></tr>
 		{% endfor %}
 	</table>
 {% else %}
 	<p>None yet.</p>
 {% endif %}
-<a href="/program">Make more</a>
+<a href="/config/program">Make more</a>
 {% endblock %}
