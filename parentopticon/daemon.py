@@ -39,7 +39,9 @@ def main() -> None:
 			except client.SkipLoop as ex:
 				LOGGER.warning("Skipping the loop. %s", ex)
 			end = time.time()
-			time.sleep(args.loop_time - (end - start))
+			to_sleep = args.loop_time - (end - start)
+			if to_sleep > 0:
+				time.sleep()
 	except KeyboardInterrupt:
 		LOGGER.info("Exiting due to SIGINT")
 	LOGGER.info("Parentopticon daemon closed.")
