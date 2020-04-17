@@ -176,6 +176,7 @@ def _user_to_status_for(connection: Connection,
 			end = program_session.end or now
 			elapsed = (end - program_session.start)
 			minutes_used_today += elapsed.total_seconds() / 60
+		minutes_used_today = round(minutes_used_today, 1)
 		results[program_group.name] = Status(
 			minutes_used_today = minutes_used_today,
 			minutes_remaining_today = minutes_allowed_today - minutes_used_today,
