@@ -34,7 +34,7 @@ async def config_get(request):
 	programs = list(tables.Program.list(app.db_connection))
 	program_groups = list(tables.ProgramGroup.list(app.db_connection))
 	program_sessions = list(tables.ProgramSession.list(app.db_connection, end=None))
-	return _render("config.html",
+	return _render("config/index.html",
 		programs=programs,
 		program_groups=program_groups,
 		program_sessions=program_sessions,
@@ -44,7 +44,7 @@ async def config_get(request):
 async def config_one_time_messages_get(request):
 	usernames = queries.usernames(app.db_connection)
 	one_time_messages = tables.OneTimeMessage.list(app.db_connection)
-	return _render("one-time-messages.html",
+	return _render("config/one-time-messages.html",
 		one_time_messages = one_time_messages,
 		usernames=usernames
 	)
@@ -69,7 +69,7 @@ async def config_program_get(request, program_id: int):
 		return redirect("/config/program")
 	program_groups = list(tables.ProgramGroup.list(app.db_connection))
 	program_processes = list(tables.ProgramProcess.list(app.db_connection, program=program_id))
-	return _render("program.html",
+	return _render("config/program.html",
 		program_groups=program_groups,
 		program=program,
 		program_processes=program_processes,
@@ -79,7 +79,7 @@ async def config_program_get(request, program_id: int):
 async def config_programs_get(request):
 	programs = list(tables.Program.list(app.db_connection))
 	program_groups = list(tables.ProgramGroup.list(app.db_connection))
-	return _render("programs.html",
+	return _render("config/programs.html",
 		programs = programs,
 		program_groups = program_groups,
 	)
@@ -100,7 +100,7 @@ async def config_program_group_get(request, program_group_id: int):
 	pg = tables.ProgramGroup.get(app.db_connection, program_group_id)
 	if not pg:
 		return redirect("/config/program-group")
-	return _render("program-group.html", program_group=pg)
+	return _render("config/program-group.html", program_group=pg)
 
 @app.route("/config/program-group", methods=["POST"])
 async def config_program_groups_post(request):
@@ -131,7 +131,7 @@ async def config_program_groups_post(request):
 
 @app.route("/config/program-group", methods=["GET"])
 async def config_program_groups_get(request):
-	return _render("program-groups.html")
+	return _render("config/program-groups.html")
 
 @app.route("/config/program-process", methods=["POST"])
 async def config_program_process_post(request):
