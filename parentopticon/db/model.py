@@ -167,7 +167,11 @@ class Model:
 		"""
 		select_statement = cls.select_statement(where=where)
 		bindings = bindings or ()
-		rows = connection.execute(select_statement, bindings)
+		try:
+			rows = connection.execute(select_statement, bindings)
+		except sqlite3.OperationalError as ex:
+			LOGGER.error("%s\n\nwhere: %s\nbindings: %s", ex, where, bindings)
+			raise
 		column_names = [k for k, _ in cls.columns_sorted()]
 		for row in rows:
 			data = {k: v for k, v in zip(column_names, row)}
