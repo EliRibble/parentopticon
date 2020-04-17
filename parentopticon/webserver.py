@@ -32,9 +32,10 @@ async def action_list(request):
 
 @app.route("/config", methods=["GET"])
 async def config_get(request):
+	programs = list(tables.Program.list(app.db_connection))
 	program_groups = list(tables.ProgramGroup.list(app.db_connection))
-	LOGGER.info("Program groups: %s", program_groups)
 	return _render("config.html",
+		programs=programs,
 		program_groups=program_groups,
 	)
 
