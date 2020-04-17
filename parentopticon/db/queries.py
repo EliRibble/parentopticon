@@ -143,6 +143,7 @@ Status = collections.namedtuple("Status", (
 	"group",
 	"minutes_used_today",
 	"minutes_remaining_today",
+	"pids",
 ))
 def user_to_status(connection: Connection) -> Mapping[str, Mapping[str, Status]]:
 	"""Get a mapping of usernames to their current status.
@@ -200,15 +201,18 @@ def _user_to_status_for(connection: Connection,
 		program_sessions_today = program_session_list_since(connection, _today_start(), programs=program_ids)
 		minutes_used_today = 0
 		minutes_allowed_today = _minutes_allowed_today(program_group)
+		pids = set()
 		for program_session in program_sessions_today:
 			end = program_session.end or now
 			elapsed = (end - program_session.start)
 			minutes_used_today += elapsed.total_seconds() / 60
+			pids.add(program_session.pids)
 		minutes_used_today = round(minutes_used_today, 1)
 		results[program_group.name] = Status(
 			group = program_group.id,
 			minutes_used_today = minutes_used_today,
 			minutes_remaining_today = minutes_allowed_today - minutes_used_today,
+			pids = sorted(list(pids)),
 		)
 	return results
 

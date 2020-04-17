@@ -15,8 +15,10 @@ app = Sanic()
 app.static("/static", "./static")
 app.static("/favicon.ico", "static/img/parentopticon.ico")
 
-def _render(template: str, **kwargs):
-	return html(app.jinja_env.get_template(template).render(**kwargs))
+def _render(filename: str, **kwargs):
+	template = app.jinja_env.get_template(filename)
+	content = template.render(now=datetime.datetime.now(), **kwargs)
+	return html(content)
 
 
 @app.route("/action", methods=["GET"])

@@ -8,12 +8,22 @@
 {% for user, groups_to_status in user_to_status.items() %}
 	<h2>{{ user }}</h2>
 	<table>
-		<tr><th>Program Group</th><th>Minutes Used</th><th>Minutes Remaining</th></tr>
+		<tr>
+			<th>Program Group</th>
+			<th>Minutes Used</th>
+			<th>Minutes Remaining</th>
+			<th>PIDs</th>
+		</tr>
 		{% for groupname, status in groups_to_status.items() %}
 			<tr>
 				<td><a href="/program-group/{{ status.group }}">{{ groupname }}</a></td>
 				<td>{{ status.minutes_used_today }}</td>
 				<td>{{ status.minutes_remaining_today }}</td>
+				<td><ul>
+					{% for pid in status.pids %}
+						<li>{{ pid }}</li>
+					{% endfor %}
+				</ul></td>
 			</tr>
 		{% endfor %}
 	</table>

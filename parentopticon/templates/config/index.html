@@ -3,6 +3,7 @@
 {% block content %}
 <h1>Parentopticon Config Page</h1>
 
+<p>Now: {{ now }}</p>
 <a href="/config/one-time-message">Send one-time message</a>
 
 <h2>Program Groups</h2>
@@ -22,9 +23,12 @@
 <h2>Programs</h2>
 {% if programs %}
 	<table>
-		<tr><th>Name</th></tr>
+		<tr><th>ID</th><th>Name</th></tr>
 		{% for program in programs %}
-			<tr><td><a href="/config/program/{{ program.id }}">{{ program.name }}</td></tr>
+			<tr>
+				<td>{{ program.id }}</td>
+				<td><a href="/config/program/{{ program.id }}">{{ program.name }}</td>
+			</tr>
 		{% endfor %}
 	</table>
 {% else %}
@@ -32,15 +36,25 @@
 {% endif %}
 <a href="/config/program">Make more</a>
 
-<h2>Open Program Sessions</h2>
+<h2>Program Sessions</h2>
 {% if program_sessions %}
 	<table>
-		<tr><th>Username</th><th>Hostname</th><th>Time</th></tr>
+		<tr>
+			<th>Username</th>
+			<th>Hostname</th>
+			<th>Start</th>
+			<th>End</th>
+			<th>Program</th>
+			<th>PIDs</th>
+		</tr>
 		{% for program_session in program_sessions %}
 			<tr>
 				<td>{{ program_session.username }}</td>
 				<td>{{ program_session.hostname }}</td>
-				<td>{{ program_session.start | humanize }}</td>
+				<td>{{ program_session.start }}</td>
+				<td>{{ program_session.end }}</td>
+				<td>{{ program_session.program }}</td>
+				<td>{{ program_session.pids }}</td>
 			</tr>
 		{% endfor %}
 	</table>
