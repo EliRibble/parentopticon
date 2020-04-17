@@ -152,7 +152,10 @@ async def config_programs_get(request):
 
 @app.route("/program-group/<program_group_id:int>", methods=["GET"])
 async def program_group_get(request, program_group_id: int):
-	return _render("index.html")
+	program_group = tables.ProgramGroup.get(app.db_connection, program_group_id)
+	if not program_group:
+		redirect("/")
+	return _render("program-group.html")
 
 @app.route("/snapshot", methods=["POST"])
 async def snapshot_post(request):
