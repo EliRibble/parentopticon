@@ -49,7 +49,6 @@ def actions_for_username_kills(connection: Connection, hostname: str, username: 
 		if status.minutes_remaining_today < 0:
 			pids.update(status.pids)
 	LOGGER.info("Killing pids %s", pids)
-	return []
 	return [Action(
 		content = pid,
 		type = "kill",
