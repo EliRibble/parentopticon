@@ -12,6 +12,17 @@ Group = collections.namedtuple("Group", ("id", "name", "limit", "window_week"))
 Process = collections.namedtuple("Process", ("id", "name", "program_id"))
 Program = collections.namedtuple("Program", ("id", "name", "group", "processes"))
 
+class OneTimeMessage(Model):
+	"A message to send once to a given person."
+	COLUMNS = {
+		"id": ColumnInteger(autoincrement=True, primary_key=True),
+		"content": ColumnText(null=False),
+		"hostname": ColumnText(null=True),
+		"created": ColumnDatetime(null=False),
+		"sent": ColumnDatetime(null=True),
+		"username": ColumnText(null=True),
+	}
+
 class ProgramGroup(Model):
 	"A group of several programs tracked together."
 	COLUMNS = {
@@ -57,7 +68,7 @@ class ProgramProcess(Model):
 	}
 
 class ProgramSession(Model):
-	"A session using a particula rprogram."
+	"A session using a particular program."
 	COLUMNS = {
 		"id": ColumnInteger(autoincrement=True, primary_key=True),
 		"hostname": ColumnText(null=False),
@@ -191,6 +202,7 @@ def truncate_all(connection: Connection) -> None:
 
 def create_all(connection: Connection):
 	LOGGER.info("Ensuring DB tables exist.")
+	connection.cursor.execute(OneTimeMessage.create_statement())
 	connection.cursor.execute(ProgramGroup.create_statement())
 	connection.cursor.execute(ProgramGroupBonus.create_statement())
 	connection.cursor.execute(Program.create_statement())
