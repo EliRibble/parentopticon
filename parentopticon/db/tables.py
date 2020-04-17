@@ -60,10 +60,12 @@ class ProgramSession(Model):
 	"A session using a particula rprogram."
 	COLUMNS = {
 		"id": ColumnInteger(autoincrement=True, primary_key=True),
+		"hostname": ColumnText(null=False),
 		"end": ColumnDatetime(null=True),
 		"pids": ColumnText(null=False),
 		"program": ColumnForeignKey(Program),
 		"start": ColumnDatetime(null=False),
+		"username": ColumnText(null=False),
 	}
 
 	@property

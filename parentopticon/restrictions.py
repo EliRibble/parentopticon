@@ -3,8 +3,6 @@ import datetime
 import enum
 import typing
 
-import yaml
-
 class Window:
 	"""A window of time between unlock and lock."""
 	def __init__(self, start: datetime.time, end: datetime.time):
@@ -91,12 +89,6 @@ class Config:
 		self.programs = {program.name: program for program in programs}
 		self.windows = {window.name: window for window in windows}
 
-
-def load() -> Config:
-	"""Read in the system-wide restrictions."""
-	with open("/etc/parentopticon.yaml", "r") as config:
-		content = yaml.load(config)
-	return _parse_entire_config(content)
 
 def _parse_entire_config(content: typing.Dict) -> Config:
 	"""Take a config which is just a JSON body and turn it into the proper instances."""

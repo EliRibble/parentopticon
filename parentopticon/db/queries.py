@@ -24,16 +24,27 @@ def program_session_close(connection: Connection, program_session_id: int) -> No
 		(datetime.datetime.now(), program_session_id)
 	)
 
-def program_session_create_or_add(connection: Connection, elapsed_seconds: int, program_name: str, pids: Iterable[int]) -> int:
+def program_session_create_or_add(
+		connection: Connection,
+		hostname: str,
+		username: str,
+		elapsed_seconds: int,
+		program_name: str, pids: Iterable[int]) -> int:
 	"Either create a new program session or update an existing one."
 	program = Program.search(connection, name=program_name)
-	program_session = ProgramSession.search(connection, program=program.id, end=None)
+	program_session = ProgramSession.search(connection,
+		program=program.id,
+		hostname=hostname,
+		username=username,
+		end=None)
 	if program_session is None:
 		return ProgramSession.insert(connection,
 			end = None,
+			hostname = hostname,
 			pids = ",".join(sorted(pids)),
 			program = program.id,
 			start = datetime.datetime.now(),
+			username = username,
 		)
 	return program_session.id
 			
@@ -96,14 +107,19 @@ def program_session_list_since(connection: Connection, moment: datetime.datetime
 			program_id = data[3],
 		)
 
-def snapshot_store(connection: Connection, elapsed_seconds: int, pid_to_program: Mapping[int, str]) -> None:
+def snapshot_store(
+		connection: Connection,
+		hostname: str,
+		username: str,
+		elapsed_seconds: int,
+		pid_to_program: Mapping[int, str]) -> None:
 	"Take a snapshot from a host, store it."
 	# create a list of pids for each program
 	program_to_pids = collections.defaultdict(list)
 	for pid, program in pid_to_program.items():
 		program_to_pids[program].append(pid)
 	for program, pids in program_to_pids.items():
-		program_session_create_or_add(connection, elapsed_seconds, program, pids)
+		program_session_create_or_add(connection, hostname, username, elapsed_seconds, program, pids)
 	
 
 def window_week_day_span_create(connection: Connection, day: int, end: int, start: int, window_id: int) -> int:

@@ -51,34 +51,40 @@ class GetProgramSessionsCurrentTests(test_utilities.DBTestCase):
 			Program.insert(self.db, name="Terraria", program_group=self.group_id),
 		]
 
-	@freezegun.freeze_time("2020-02-02 11:00:00")
 	def test_week_split(self):
 		"Can we capture time spent this week outside this month?"
 		# program session for this week, but not this month
 		ProgramSession.insert(
 			self.db,
 			end = datetime.datetime(2020, 2, 1, 10, 0, 0),
+			hostname = "testhost",
 			pids = "",
 			program = self.programs[0],
 			start = datetime.datetime(2020, 2, 1, 9, 10, 0),
+			username = "testuser",
 		)
 		# program session last month, last week
 		ProgramSession.insert(
 			self.db,
 			end = datetime.datetime(2020, 1, 25, 10, 0, 0),
+			hostname = "testhost",
 			pids = "",
 			program = self.programs[1],
 			start = datetime.datetime(2020, 1, 25, 9, 0, 0),
+			username = "testuser",
 		)
 		# program session earlier today
 		ProgramSession.insert(
 			self.db,
 			end = datetime.datetime(2020, 2, 2, 10, 0, 0),
+			hostname = "testhost",
 			pids = "",
 			program = self.programs[1],
 			start = datetime.datetime(2020, 2, 2, 9, 0, 0),
+			username = "testuser",
 		)
-		result = enforcement.get_program_sessions_current(self.db)
+		with freezegun.freeze_time("2020-02-02 11:00:00"):
+			result = enforcement.get_program_sessions_current(self.db)
 		self.assertEqual(len(result), 2)
 			
 		

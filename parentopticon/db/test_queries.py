@@ -1,6 +1,7 @@
 import datetime
 import os
 import unittest
+from typing import Optional
 
 from parentopticon.db import test_utilities
 from parentopticon.db import queries
@@ -54,15 +55,21 @@ class ProgramSessionTests(test_utilities.DBTestCase):
 			program_group=self.group_id)
 		ProgramProcess.insert(self.db, name="net.minecraft.client.main.Main", program=self.program_id)
 
-	def test_session_close(self):
-		"Can we close a session after opening it?"
-		program_session_id = ProgramSession.insert(
-			self.db,
-			end = None,
+	def make_program_session(self,
+		end: Optional[datetime.datetime] = None,
+		start: Optional[datetime.datetime] = None) -> int:
+		return ProgramSession.insert(self.db,
+			end = end,
+			hostname = "testhost",
 			pids = "",
 			program = self.program_id,
-			start = datetime.datetime.now(),
+			start = start or datetime.datetime.now(),
+			username = "testuser",
 		)
+
+	def test_session_close(self):
+		"Can we close a session after opening it?"
+		program_session_id = self.make_program_session()
 		program_session = ProgramSession.get(self.db, program_session_id)
 		self.assertEqual(program_session.end, None)
 
@@ -73,20 +80,8 @@ class ProgramSessionTests(test_utilities.DBTestCase):
 
 	def test_session_list_since(self):
 		"Can we list sessions since an arbitrary date?"
-		ProgramSession.insert(
-			self.db,
-			end = None,
-			pids = "",
-			program = self.program_id,
-			start = datetime.datetime(2020, 3, 1),
-		)
-		ProgramSession.insert(
-			self.db,
-			end = None,
-			pids = "",
-			program = self.program_id,
-			start = datetime.datetime(2020, 2, 1),
-		)
+		self.make_program_session(start=datetime.datetime(2020, 3, 1))
+		self.make_program_session(start=datetime.datetime(2020, 2, 1))
 		moment = datetime.datetime(2020, 2, 14, 1, 0, 0)
 		results = list(queries.program_session_list_since(self.db, moment))
 		self.assertEqual(len(results), 1)
@@ -96,19 +91,10 @@ class ProgramSessionTests(test_utilities.DBTestCase):
 		"Can we list all the sessions that are still open?"
 		results = list(queries.program_session_list_open(self.db))
 		self.assertEqual(len(results), 0)
-		ProgramSession.insert(
-			self.db,
-			end = None,
-			pids = "",
-			program = self.program_id,
-			start = datetime.datetime(2020, 3, 1),
-		)
-		ProgramSession.insert(
-			self.db,
-			end = datetime.datetime(2020, 3, 3),
-			pids = "",
-			program = self.program_id,
-			start = datetime.datetime(2020, 3, 1),
+		self.make_program_session(start=datetime.datetime(2020, 3, 1))
+		self.make_program_session(
+			end=datetime.datetime(2020, 3, 3),
+			start=datetime.datetime(2020, 3, 1),
 		)
 		results = list(queries.program_session_list_open(self.db))
 		self.assertEqual(len(results), 1)
@@ -119,8 +105,10 @@ class ProgramSessionTests(test_utilities.DBTestCase):
 		program_session_id = queries.program_session_create_or_add(
 			self.db,
 			elapsed_seconds = 0,
+			hostname="testhost",
 			program_name = "Minecraft",
 			pids = [],
+			username="testuser",
 		)
 		results = ProgramSession.get(self.db, program_session_id)
 		self.assertEqual(results.program, self.program_id)

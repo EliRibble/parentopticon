@@ -45,8 +45,12 @@ async def config_program_get(request, program_id: int):
 	if not program:
 		return redirect("/program")
 	program_groups = list(tables.ProgramGroup.list(app.db_connection))
-	# program_sessions = app.db_connection.program_session_list_by_program(program_id)
-	return _render("program.html", program=program, program_groups=program_groups)
+	program_processes = list(tables.ProgramProcess.list(app.db_connection, program=program_id))
+	return _render("program.html",
+		program_groups=program_groups,
+		program=program,
+		program_processes=program_processes,
+	)
 
 @app.route("/config/program", methods=["GET"])
 async def config_programs_get(request):
@@ -118,6 +122,8 @@ async def config_program_process_post(request):
 
 @app.route("/program-by-process", methods=["GET"])
 async def config_programs_get(request):
+	# hostname = request.args["hostname"]
+	# username = request.args["username"]
 	process_by_program = queries.list_program_by_process(app.db_connection)
 	return json(process_by_program)
 
@@ -127,8 +133,9 @@ def program_post(request):
 	LOGGER.info("got a snapshot POST: %s", request.json)
 	elapsed_seconds = request.json.get("elapsed_seconds", 0)
 	hostname = request.json["hostname"]
+	username = request.json["username"]
 	pid_to_program = request.json["programs"]
-	queries.snapshot_store(hostname, elapsed_seconds, pid_to_program)
+	queries.snapshot_store(app.db_connection, hostname, username, elapsed_seconds, pid_to_program)
 	return empty()
 
 @app.route("/")
