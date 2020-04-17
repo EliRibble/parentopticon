@@ -142,11 +142,9 @@ def program_post(request):
 
 @app.route("/")
 async def root(request):
-	open_sessions = queries.program_session_list_open(app.db_connection)
-	closed_sessions = tables.ProgramSession.list(app.db_connection)
+	user_to_status = queries.user_to_status(app.db_connection)
 	return _render("index.html",
-		closed_sessions=closed_sessions,
-		open_sessions=open_sessions,
+		user_to_status=user_to_status,
 	)
 
 

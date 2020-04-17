@@ -5,34 +5,19 @@
 <body>
 <h1>Parentopticon Main Page</h1>
 
-<h2>Open Program Sessions</h2>
-{% if open_sessions %}
-<table>
-	<tr><th>Name</th><th>Start</th></tr>
-	{% for session in open_sessions %}
-	<tr>
-		<td>{{ session.program }}</td>
-		<td>{{ session.start | humanize }}</td>
-	</tr>
-	{% endfor %}
-</table>
-{% else %}
-	<p>None yet.</p>
-{% endif %}
-
-<h2>Closed Program Sessions</h2>
-{% if closed_sessions %}
-<table>
-	<tr><th>Name</th><th>Start</th></tr>
-	{% for session in closed_sessions %}
-	<tr>
-		<td>{{ session.program }}</td>
-		<td>{{ session.start | humanize }}</td>
-	</tr>
-	{% endfor %}
-</table>
-{% else %}
-	<p>None yet.</p>
-{% endif %}
+<h2>Users</h2>
+{% for user, groups_to_status in user_to_status.items() %}
+	<h3>{{ user }}</h3>
+	<table>
+		<tr><th>Program Group</th><th>Minutes Used</th><th>Minutes Remaining</th></tr>
+		{% for groupname, status in groups_to_status.items() %}
+			<tr>
+				<td>{{ groupname }}</td>
+				<td>{{ status.minutes_used_today }}</td>
+				<td>{{ status.minutes_remaining_today }}</td>
+			</tr>
+		{% endfor %}
+	</table>
+{% endfor %}
 </body>
 </html>

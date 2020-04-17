@@ -87,19 +87,6 @@ class ProgramSessionTests(test_utilities.DBTestCase):
 		self.assertEqual(len(results), 1)
 		self.assertEqual(results[0].program_id, self.program_id)
 
-	def test_session_list_open(self):
-		"Can we list all the sessions that are still open?"
-		results = list(queries.program_session_list_open(self.db))
-		self.assertEqual(len(results), 0)
-		self.make_program_session(start=datetime.datetime(2020, 3, 1))
-		self.make_program_session(
-			end=datetime.datetime(2020, 3, 3),
-			start=datetime.datetime(2020, 3, 1),
-		)
-		results = list(queries.program_session_list_open(self.db))
-		self.assertEqual(len(results), 1)
-		self.assertEqual(results[0].program_id, self.program_id)
-
 	def test_session_create_or_add_create(self):
 		"Can we create a session when one does not exist?"
 		program_session_id = queries.program_session_create_or_add(

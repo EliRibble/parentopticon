@@ -5,7 +5,7 @@ import sqlite3
 from typing import Any, Iterable, List, Mapping, Optional, Tuple
 
 from parentopticon.db.connection import Connection
-from parentopticon.db.tables import Process, Program, ProgramProcess, ProgramSession, WindowWeek, WindowWeekDay
+from parentopticon.db.tables import Process, Program, ProgramGroup, ProgramProcess, ProgramSession, WindowWeek, WindowWeekDay
 
 LOGGER = logging.getLogger(__name__)
 
@@ -83,29 +83,22 @@ def program_session_list_by_program(connection: Connection, program_id: int) -> 
 		)
 			
 
-def program_session_list_open(connection: Connection) -> Iterable[ProgramSession]:
-	"""Get all the open program sessions."""
-	for data in connection.cursor.execute(
-		"SELECT id, end, start, program FROM ProgramSession WHERE end IS NULL",
-		):
-		yield ProgramSession(
-			id_ = data[0],
-			end = data[1],
-			start = data[2],
-			program_id = data[3],
-		)
-
-def program_session_list_since(connection: Connection, moment: datetime.datetime) -> Iterable[ProgramSession]:
+def program_session_list_since(
+		connection: Connection,
+		moment: datetime.datetime,
+		programs: Optional[List[int]]) -> Iterable[ProgramSession]:
 	"""Get all program sessions that started after a moment."""
-	for data in connection.cursor.execute(
-		"SELECT id, end, start, program FROM ProgramSession WHERE start > ?",
-		(moment,)):
-		yield ProgramSession(
-			id_ = data[0],
-			end = data[1],
-			start = data[2],
-			program_id = data[3],
-		)
+	if programs is None:
+		where = "start > ?"
+		bindings = (moment,)
+	else:
+		where = "start > ? AND program IN ({})".format(",".join(["?"]*len(programs)))
+		bindings = [moment] + programs
+	return ProgramSession.list_where(
+		connection,
+		where=where,
+		bindings=bindings,
+	)
 
 def snapshot_store(
 		connection: Connection,
@@ -122,10 +115,70 @@ def snapshot_store(
 		program_session_create_or_add(connection, hostname, username, elapsed_seconds, program, pids)
 	
 
-def window_week_day_span_create(connection: Connection, day: int, end: int, start: int, window_id: int) -> int:
-	connection.execute(
-		"INSERT INTO WindowWeekDaySpan (day, end, start, window_id) VALUES (?, ?, ?, ?)",
-		(day, end, start, window_id))
-	connection.commit()
-	return connection.lastrowid
+Status = collections.namedtuple("Status", (
+	"minutes_used_today",
+	"minutes_remaining_today",
+))
+def user_to_status(connection: Connection) -> Mapping[str, Mapping[str, Status]]:
+	"""Get a mapping of usernames to their current status.
+
+	The results map from a username to another mapping. That inner mapping maps
+	from a group name to the minutes left.
+	"""
+	results = {}
+	rows = connection.execute("SELECT DISTINCT username FROM ProgramSession").fetchall()
+	usernames = [row[0] for row in rows]
+	program_groups = list(ProgramGroup.list(connection))
+	programs = list(Program.list(connection))
+	now = datetime.datetime.now()
+	for username in usernames:
+		results[username] = _user_to_status_for(connection, username, program_groups, programs)
+	return results
+
+def _minutes_allowed_today(program_group: ProgramGroup) -> int:
+	"Get the minutes allowed today."
+	today = datetime.datetime.now().isoweekday()
+	prop = [
+		"minutes_monday",
+		"minutes_tuesday",
+		"minutes_wednesday",
+		"minutes_thursday",
+		"minutes_friday",
+		"minutes_saturday",
+		"minutes_sunday",
+	][today - 1]
+	return getattr(program_group, prop)
+
+def _today_start() -> datetime.datetime:
+	"Get the starting moment for today."
+	now = datetime.datetime.now()
+	return now.replace(
+		hour = 0,
+		minute = 0,
+		second = 0,
+	)
+
+def _user_to_status_for(connection: Connection,
+		username: str, 
+		program_groups: Iterable[ProgramGroup],
+		programs: Iterable[Program],
+		) -> Mapping[str, Status]:
+	"""Get the mapping of group names to status for a given user."""
+	results = {}
+	now = datetime.datetime.now()
+	for program_group in program_groups:
+		programs_for_group = [program for program in programs if program.program_group == program_group.id]
+		program_ids = [program.id for program in programs_for_group]
+		program_sessions_today = program_session_list_since(connection, _today_start(), programs=program_ids)
+		minutes_used_today = 0
+		minutes_allowed_today = _minutes_allowed_today(program_group)
+		for program_session in program_sessions_today:
+			end = program_session.end or now
+			elapsed = (end - program_session.start)
+			minutes_used_today += elapsed.total_seconds() / 60
+		results[program_group.name] = Status(
+			minutes_used_today = minutes_used_today,
+			minutes_remaining_today = minutes_allowed_today - minutes_used_today,
+		)
+	return results
 
