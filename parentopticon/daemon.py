@@ -41,7 +41,7 @@ def main() -> None:
 			end = time.time()
 			to_sleep = args.loop_time - (end - start)
 			if to_sleep > 0:
-				time.sleep()
+				time.sleep(to_sleep)
 	except KeyboardInterrupt:
 		LOGGER.info("Exiting due to SIGINT")
 	LOGGER.info("Parentopticon daemon closed.")
