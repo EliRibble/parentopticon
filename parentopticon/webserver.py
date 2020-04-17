@@ -150,6 +150,10 @@ async def config_programs_get(request):
 	process_by_program = queries.list_program_by_process(app.db_connection)
 	return json(process_by_program)
 
+@app.route("/program-group/<program_group_id:int>", methods=["GET"])
+async def program_group_get(request, program_group_id: int):
+	return _render("index.html")
+
 @app.route("/snapshot", methods=["POST"])
 def program_post(request):
 	"Handle a client POSTing its currently running programs"

@@ -11,7 +11,7 @@
 		<tr><th>Program Group</th><th>Minutes Used</th><th>Minutes Remaining</th></tr>
 		{% for groupname, status in groups_to_status.items() %}
 			<tr>
-				<td>{{ groupname }}</td>
+				<td><a href="/program-group/{{ status.group }}">{{ groupname }}</a></td>
 				<td>{{ status.minutes_used_today }}</td>
 				<td>{{ status.minutes_remaining_today }}</td>
 			</tr>

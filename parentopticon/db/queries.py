@@ -140,6 +140,7 @@ def snapshot_store(
 	
 
 Status = collections.namedtuple("Status", (
+	"group",
 	"minutes_used_today",
 	"minutes_remaining_today",
 ))
@@ -205,6 +206,7 @@ def _user_to_status_for(connection: Connection,
 			minutes_used_today += elapsed.total_seconds() / 60
 		minutes_used_today = round(minutes_used_today, 1)
 		results[program_group.name] = Status(
+			group = program_group.id,
 			minutes_used_today = minutes_used_today,
 			minutes_remaining_today = minutes_allowed_today - minutes_used_today,
 		)
