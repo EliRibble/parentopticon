@@ -11,7 +11,8 @@ from parentopticon.db.connection import Connection
 
 LOGGER = logging.getLogger(__name__)
 app = Sanic()
-
+app.static("/static", "./static")
+app.static("/favicon.ico", "static/img/parentopticon.ico")
 
 def _render(template: str, **kwargs):
 	return html(app.jinja_env.get_template(template).render(**kwargs))
