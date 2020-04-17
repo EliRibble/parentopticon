@@ -155,7 +155,7 @@ async def program_group_get(request, program_group_id: int):
 	return _render("index.html")
 
 @app.route("/snapshot", methods=["POST"])
-def program_post(request):
+async def snapshot_post(request):
 	"Handle a client POSTing its currently running programs"
 	LOGGER.info("got a snapshot POST: %s", request.json)
 	elapsed_seconds = request.json.get("elapsed_seconds", 0)
