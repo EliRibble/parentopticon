@@ -34,9 +34,11 @@ async def action_list(request):
 async def config_get(request):
 	programs = list(tables.Program.list(app.db_connection))
 	program_groups = list(tables.ProgramGroup.list(app.db_connection))
+	program_sessions = list(tables.ProgramSession.list(app.db_connection, end=None))
 	return _render("config.html",
 		programs=programs,
 		program_groups=program_groups,
+		program_sessions=program_sessions,
 	)
 
 @app.route("/config/program/<program_id:int>", methods=["GET"])

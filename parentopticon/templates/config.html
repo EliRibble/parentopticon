@@ -29,4 +29,21 @@
 	<p>None yet.</p>
 {% endif %}
 <a href="/config/program">Make more</a>
+
+<h2>Open Program Sessions</h2>
+{% if program_sessions %}
+	<table>
+		<tr><th>Username</th><th>Hostname</th><th>Time</th></tr>
+		{% for program_session in program_sessions %}
+			<tr>
+				<td>{{ program_session.username }}</td>
+				<td>{{ program_session.hostname }}</td>
+				<td>{{ program_session.start | humanize }}</td>
+			</tr>
+		{% endfor %}
+	</table>
+{% else %}
+<p>None yet</p>
+{% endif %}
+
 {% endblock %}
