@@ -212,6 +212,32 @@ class Model:
 		"Get the statement to truncate the table."
 		return "DELETE FROM {}".format(cls.__name__)
 
+	@classmethod
+	def update(cls, connection: Connection, id_: int, **kwargs) -> int:
+		"Update a single row."
+		if not kwargs:
+			return
+		sets, bindings = kwargs_to_set_and_bindings(**kwargs)
+		statement = "UPDATE {} SET {} WHERE id = ?".format(
+			cls.__name__,
+			sets,
+		)
+		bindings.append(id_)
+		return connection.execute_commit_return(statement, bindings)
+
+def kwargs_to_set_and_bindings(**kwargs) -> Tuple[str, List[Any]]:
+	"Turn kwargs into a SET update statement and matching bindings."
+	set_parts = []
+	bindings = []
+	for k, v in kwargs.items():
+		if v is None:
+			set_parts.append("{} = NULL".format(k))
+		else:
+			set_parts.append("{} = ?".format(k))
+			bindings.append(v)
+	statement = ", ".join(set_parts)
+	return statement, bindings
+		
 def kwargs_to_where_and_bindings(**kwargs) -> Tuple[Optional[str], List[Any]]:
 	"Turn kwargs into a where statement and matching bindings."
 	if not kwargs:

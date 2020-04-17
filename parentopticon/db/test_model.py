@@ -101,3 +101,20 @@ class ModelTests(test_utilities.DBTestCase):
 		results = ModelTests.MyTable.search(self.db, name=None)
 		self.assertEqual(results.name, None)
 		self.assertEqual(results.count, 4)
+
+	def test_update(self):
+		"Can we update a row with update()?"
+		rows = self._makerows(names=["foo"])
+		row_id = list(rows)[0]
+		ModelTests.MyTable.update(self.db, row_id, name="biff")
+		results = ModelTests.MyTable.get(self.db, row_id)
+		self.assertEqual(results.name, "biff")
+
+	def test_update_multiple(self):
+		"Can we update a row with multiple values?"
+		rows = self._makerows(names=["foo"])
+		row_id = list(rows)[0]
+		ModelTests.MyTable.update(self.db, row_id, name="biff", count=100)
+		results = ModelTests.MyTable.get(self.db, row_id)
+		self.assertEqual(results.count, 100)
+		self.assertEqual(results.name, "biff")
