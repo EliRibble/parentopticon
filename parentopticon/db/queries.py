@@ -82,7 +82,7 @@ def program_session_create_or_add(
 		username=username,
 		end=None)
 	if program_session is None:
-		return ProgramSession.insert(connection,
+		program_session_id = ProgramSession.insert(connection,
 			end = None,
 			hostname = hostname,
 			pids = ",".join(sorted(pids)),
@@ -90,7 +90,17 @@ def program_session_create_or_add(
 			start = datetime.datetime.now(),
 			username = username,
 		)
-	return program_session.id
+		LOGGER.debug("Created new program session %s", program_session_id)
+	else:
+		program_session_id = program_session.id
+		ProgramSession.update(connection,
+			program_session_id,
+			pids = ",".join(sorted(pids)),
+		)
+		LOGGER.debug("Updated program session %d to have pids %s",
+			program_session_id,
+			sorted(pids))
+	return program_session_id
 			
 			
 		
@@ -155,6 +165,7 @@ def snapshot_store(
 	program_to_pids = collections.defaultdict(list)
 	for pid, program in pid_to_program.items():
 		program_to_pids[program].append(pid)
+	LOGGER.debug("Program to pids: %s", program_to_pids)
 	for program, pids in program_to_pids.items():
 		program_session_create_or_add(connection, hostname, username, elapsed_seconds, program, pids)
 	
