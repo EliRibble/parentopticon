@@ -37,10 +37,11 @@ class Client:
 	def __init__(self, host: str) -> None:
 		self.host = host
 		self.hostname = socket.gethostname()
+		self.username = os.getusername()
 
 	def get_actions(self) -> Iterable[Action]:
 		"Get the enforcement actions to take."
-		url = self.url("/action", {"hostname": self.hostname})
+		url = self.url("/action", {"hostname": self.hostname, "username": self.username})
 		response = requests.get(url)
 		if not response.ok:
 			raise SkipLoop("Failed to get actions: %s", response.text)
@@ -53,7 +54,7 @@ class Client:
 
 	def get_processes_and_programs(self) -> Mapping[str, str]:
 		"Get the processes and programs we care about."
-		url = self.url("/program", {"hostname": self.hostname})
+		url = self.url("/program-by-process", {"hostname": self.hostname, "username": self.username})
 		response = requests.get(url)
 		if not response.ok:
 			raise SkipLoop("Failed to get interesting processes and programs: {}.".format(response.text))
@@ -66,6 +67,7 @@ class Client:
 			"elapsed_seconds": elapsed_seconds,
 			"hostname": self.hostname,
 			"programs": pid_to_program,
+			"username": self.username,
 		}
 		response = requests.post(url, json=data)
 		if not response.ok:
