@@ -38,27 +38,8 @@ async def config_get(request):
 		program_groups=program_groups,
 	)
 
-@app.route("/limit", methods=["POST"])
-async def limit_post(request):
-	name = request.form["name"][0]
-	daily = int(request.form["daily"][0])
-	weekly = int(request.form["weekly"][0])
-	monthly = int(request.form["monthly"][0])
-	limit_id = app.db_connection.limit_create(
-		name = name,
-		daily = daily,
-		weekly = weekly,
-		monthly = monthly,
-	)
-	return redirect("/limit/{}".format(limit_id))
-
-@app.route("/limit/<limit_id:int>", methods=["GET"])
-async def limit_get(request, limit_id: int):
-	limit = app.db_connection.limit_get(limit_id)
-	return _render("limit.html", limit=limit)
-
-@app.route("/program/<program_id:int>", methods=["GET"])
-async def program(request, program_id: int):
+@app.route("/config/program/<program_id:int>", methods=["GET"])
+async def config_program_get(request, program_id: int):
 	program = tables.Program.get(app.db_connection, program_id)
 	if not program:
 		return redirect("/program")
@@ -66,8 +47,8 @@ async def program(request, program_id: int):
 	# program_sessions = app.db_connection.program_session_list_by_program(program_id)
 	return _render("program.html", program=program, program_groups=program_groups)
 
-@app.route("/program", methods=["GET"])
-async def programs_get(request):
+@app.route("/config/program", methods=["GET"])
+async def config_programs_get(request):
 	programs = list(tables.Program.list(app.db_connection))
 	program_groups = list(tables.ProgramGroup.list(app.db_connection))
 	return _render("programs.html",
@@ -75,8 +56,8 @@ async def programs_get(request):
 		program_groups = program_groups,
 	)
 
-@app.route("/program", methods=["POST"])
-async def programs_post(request):
+@app.route("/config/program", methods=["POST"])
+async def config_programs_post(request):
 	name = request.form["name"][0]
 	program_group = int(request.form["program_group"][0])
 	program_id = tables.Program.insert(app.db_connection,
@@ -86,15 +67,15 @@ async def programs_post(request):
 	return redirect("/program/{}".format(program_id))
 
 
-@app.route("/program-group/<program_group_id:int>", methods=["GET"])
-async def program_group_get(request, program_group_id: int):
+@app.route("/config/program-group/<program_group_id:int>", methods=["GET"])
+async def config_program_group_get(request, program_group_id: int):
 	pg = tables.ProgramGroup.get(app.db_connection, program_group_id)
 	if not pg:
 		return redirect("/program-group")
 	return _render("program-group.html", program_group=pg)
 
-@app.route("/program-group", methods=["POST"])
-async def program_groups_post(request):
+@app.route("/config/program-group", methods=["POST"])
+async def config_program_groups_post(request):
 	name = request.form["name"][0]
 	minutes_monday = int(request.form["minutes_monday"][0])
 	minutes_tuesday = int(request.form["minutes_tuesday"][0])
@@ -120,9 +101,14 @@ async def program_groups_post(request):
 	return redirect("/program-group/{}".format(program_group_id))
 
 
-@app.route("/program-group", methods=["GET"])
-async def program_groups_get(request):
+@app.route("/config/program-group", methods=["GET"])
+async def config_program_groups_get(request):
 	return _render("program-groups.html")
+
+@app.route("/program-by-process", methods=["GET"])
+async def config_programs_get(request):
+	process_by_program = queries.list_program_by_process(app.db_connection)
+	return json(process_by_program)
 
 @app.route("/snapshot", methods=["POST"])
 def program_post(request):
