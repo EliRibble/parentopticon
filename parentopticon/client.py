@@ -3,6 +3,7 @@ Module for handling enforcement logic.
 """
 import datetime
 from enum import Enum
+import getpass
 import logging
 import os
 import signal
@@ -37,7 +38,7 @@ class Client:
 	def __init__(self, host: str) -> None:
 		self.host = host
 		self.hostname = socket.gethostname()
-		self.username = os.getusername()
+		self.username = getpass.getuser()
 
 	def get_actions(self) -> Iterable[Action]:
 		"Get the enforcement actions to take."
