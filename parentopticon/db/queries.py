@@ -17,6 +17,11 @@ Action = collections.namedtuple("Action", (
 ))
 def actions_for_username(connection: Connection, hostname: str, username: str) -> Iterable[Action]:
 	LOGGER.info("Getting list of actions for %s on '%s'", username, hostname)
+	messages = actions_for_username_messages(connection, hostname, username)
+	kills = actions_for_username_kills(connection, hostname, username)
+	return messages + kills
+
+def actions_for_username_messages(connection: Connection, hostname: str, username: str) -> Iterable[Action]:
 	one_time_messages = list(OneTimeMessage.list(
 		connection,
 		username=username,
@@ -34,7 +39,22 @@ def actions_for_username(connection: Connection, hostname: str, username: str) -
 		content=otm.content,
 		type="warn",
 	) for otm in one_time_messages]
-	
+
+def actions_for_username_kills(connection: Connection, hostname: str, username: str) -> Iterable[Action]:
+	program_groups = list(ProgramGroup.list(connection))
+	programs = list(Program.list(connection))
+	statuses = _user_to_status_for(connection, username, program_groups, programs)
+	pids = set()
+	for status in statuses.values():
+		if status.minutes_remaining_today < 0:
+			pids.update(status.pids)
+	LOGGER.info("Killing pids %s", pids)
+	return []
+	return [Action(
+		content = pid,
+		type = "kill",
+	) for pid in pids]
+
 def list_program_by_process(connection: Connection) -> Mapping[str, str]:
 	"Get the mapping of processes to their program names."
 	programs = Program.list(connection)
