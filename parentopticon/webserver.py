@@ -214,9 +214,10 @@ def run() -> None:
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-H", "--host", default="0.0.0.0", help="The port/host to bind to.")
 	parser.add_argument("-p", "--port", type=int, default=13598, help="The port to run on.")
+	parser.add_argument("--verbose", action="store_true", help="Use verbose logging.")
 	args = parser.parse_args()
 
-	log.setup()
+	log.setup(level=logging.DEBUG if args.verbose else logging.INFO)
 	try:
 		LOGGER.info("Webserver starting.")
 		app.run(host=args.host, port=args.port)

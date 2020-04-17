@@ -1,7 +1,11 @@
 import datetime
+import logging
+import sys
 
 import arrow
 import jinja2
+
+LOGGER = logging.getLogger(__name__)
 
 def _humanize(t: datetime.datetime) -> str:
 	return arrow.get(t).humanize() if t else "none"
@@ -24,8 +28,18 @@ def _timespan(t: datetime.timedelta) -> str:
 		return "{} years".format(s / (60 * 60 * 24 * 365))
 
 
+class JinjaEnvironmentSanic(jinja2.Environment):
+	"""A special jinja2 environment that avoids crashing sanic."""
+	def handle_exception(self, source=None):
+		if source is None:
+			exc_type, exc_value, tb = sys.exc_info()
+		else:
+			exc_type = type(source)
+			exc_value = source
+		LOGGER.error("Jinja exception: %s %s", exc_type, exc_value)
+		
 def create() -> jinja2.Environment:
-	env = jinja2.Environment(
+	env = JinjaEnvironmentSanic(
 		loader=jinja2.PackageLoader("parentopticon", "templates"),
 		autoescape=jinja2.select_autoescape(["html", "xml"]),
 	)
