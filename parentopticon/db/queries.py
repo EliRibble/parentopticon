@@ -126,15 +126,18 @@ def user_to_status(connection: Connection) -> Mapping[str, Mapping[str, Status]]
 	from a group name to the minutes left.
 	"""
 	results = {}
-	rows = connection.execute("SELECT DISTINCT username FROM ProgramSession").fetchall()
-	usernames = [row[0] for row in rows]
 	program_groups = list(ProgramGroup.list(connection))
 	programs = list(Program.list(connection))
 	now = datetime.datetime.now()
-	for username in usernames:
+	for username in usernames(connection):
 		results[username] = _user_to_status_for(connection, username, program_groups, programs)
 	return results
 
+def usernames(connection: Connection) -> Iterable[str]:
+	rows = connection.execute("SELECT DISTINCT username FROM ProgramSession").fetchall()
+	usernames = [row[0] for row in rows]
+	return usernames
+	
 def _minutes_allowed_today(program_group: ProgramGroup) -> int:
 	"Get the minutes allowed today."
 	today = datetime.datetime.now().isoweekday()
