@@ -106,6 +106,16 @@ async def config_program_groups_post(request):
 async def config_program_groups_get(request):
 	return _render("program-groups.html")
 
+@app.route("/config/program-process", methods=["POST"])
+async def config_program_process_post(request):
+	name = request.form["name"][0]
+	program = int(request.form["program"][0])
+	program_process_id = tables.ProgramProcess.insert(app.db_connection,
+		name = name,
+		program = program,
+	)
+	return redirect("/config/program/{}".format(program))
+
 @app.route("/program-by-process", methods=["GET"])
 async def config_programs_get(request):
 	process_by_program = queries.list_program_by_process(app.db_connection)

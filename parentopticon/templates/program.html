@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Parentopticon - Program {{ program.name }}{% endblock %}
 {% block content %}
-<h1>Program '{{program.name}}'</h1>
-<form action="/config/program/{{program.id}}" method="PUT">
+<h1>Program '{{ program.name }}'</h1>
+<form action="/config/program/{{ program.id }}" method="PUT">
 	<label for="name">Name:</label>
 	<input type="text" name="name" value="{{ program.name }}"/>
 	<label for="program_group" name="program_group"/>
@@ -13,5 +13,24 @@
 	</select>
 
 	<input type="submit" value="Update"/>
+</form>
+
+<h1>Program Processes for '{{ program.name }}'</h1>
+{% if program_processes %}
+<table>
+	<tr><th>Name</th></tr>
+	{% for program_process in program_processes %}
+		<tr><td>{{ program_process.name }}</td></tr>
+	{% endfor %}
+</table>
+{% else %}
+<p>None yet</p>
+{% endif %}
+<form action="/config/program-process" method="POST">
+	<label for="name">Name:</label>
+	<input type="text" name="name"/>
+	<input type="hidden" name="program" value="{{ program.id }}"/>
+
+	<input type="submit" value="Create"/>
 </form>
 {% endblock %}
