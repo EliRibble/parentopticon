@@ -248,6 +248,8 @@ def _user_to_status_for(connection: Connection,
 		minutes_allowed_today = _minutes_allowed_today(program_group)
 		pids = set()
 		for program_session in program_sessions_today:
+			if program_session.username != username:
+				continue
 			end = program_session.end or now
 			elapsed = (end - program_session.start)
 			minutes_used_today += elapsed.total_seconds() / 60
