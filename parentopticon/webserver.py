@@ -35,7 +35,10 @@ async def action_list(request):
 async def config_get(request):
 	programs = list(tables.Program.list(app.db_connection))
 	program_groups = list(tables.ProgramGroup.list(app.db_connection))
-	program_sessions = list(tables.ProgramSession.list(app.db_connection, end=None))
+	program_sessions = sorted(
+		tables.ProgramSession.list(app.db_connection),
+		key=lambda s: s.end,
+	)
 	return _render("config/index.html",
 		programs=programs,
 		program_groups=program_groups,

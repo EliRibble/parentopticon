@@ -61,11 +61,27 @@ def list_program_by_process(connection: Connection) -> Mapping[str, str]:
 	processes = ProgramProcess.list(connection)
 	return {process.name: program_by_id[process.program] for process in processes}
 
-def program_session_close(connection: Connection, program_session_id: int) -> None:
-	connection.execute(
-		"UPDATE ProgramSession SET end = ? WHERE id = ?",
-		(datetime.datetime.now(), program_session_id)
-	)
+def program_session_close_except(
+	connection: Connection,
+	hostname: str,
+	exempt_program_names: Iterable[str],
+	) -> None:
+	"Close all program_sessions, except any for the named programs."
+	now = datetime.datetime.now()
+	programs = Program.list(connection)
+	program_id_to_name = {program.id: program.name for program in programs}
+	open_sessions = ProgramSession.list(connection, hostname=hostname, end=None)
+	for program_session in open_sessions:
+		program_name = program_id_to_name[program_session.program]
+		if program_name in exempt_program_names:
+			continue
+		ProgramSession.update(
+			connection,
+			program_session.id,
+			end=now,
+		)
+		LOGGER.info("Ended program session %s", program_session.id)
+	
 
 def program_session_create_or_add(
 		connection: Connection,
@@ -100,9 +116,7 @@ def program_session_create_or_add(
 			program_session_id,
 			sorted(pids))
 	return program_session_id
-			
-			
-		
+
 
 def program_session_ensure_closed(connection: Connection, program_id: int) -> None:
 	"""Make sure any open program sessions are now closed."""
@@ -167,6 +181,7 @@ def snapshot_store(
 	LOGGER.debug("Program to pids: %s", program_to_pids)
 	for program, pids in program_to_pids.items():
 		program_session_create_or_add(connection, hostname, username, elapsed_seconds, program, pids)
+	program_session_close_except(connection, hostname, set(program_to_pids.keys()))
 	
 
 Status = collections.namedtuple("Status", (
