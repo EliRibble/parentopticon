@@ -37,7 +37,8 @@ async def config_get(request):
 	program_groups = list(tables.ProgramGroup.list(app.db_connection))
 	program_sessions = sorted(
 		tables.ProgramSession.list(app.db_connection),
-		key=lambda s: s.end,
+		key=lambda s: s.start,
+		reverse=True,
 	)
 	return _render("config/index.html",
 		programs=programs,
