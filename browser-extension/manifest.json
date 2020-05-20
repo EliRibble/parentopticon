@@ -4,7 +4,7 @@
   "name": "Parentopticon",
   "version": "1.0",
   "homepage_url": "https://github.com/EliRibble/parentopticon",
-  "description": "Adds a red border to all webpages.",
+  "description": "This add-on sends all web request traffic to http://parentopticon.lan which should be a hosted instance of Parentopticon on your LAN. Parentopticon then has the ability to deny access to websites.",
 
   "icons": {
     "48": "icons/parentopticon-48.png",
@@ -12,13 +12,6 @@
   },
 
   "permissions": [
-    "contextMenus",
-    "dns",
-    "privacy",
-    "storage",
-    "tabs",
-    "unlimitedStorage",
-    "webNavigation",
     "webRequest",
     "webRequestBlocking",
     "http://*/*",
@@ -31,8 +24,9 @@
 
   "browser_specific_settings": {
      "gecko": {
-	   "strict_min_version": "57.0a1"
-	 }
+      "strict_min_version": "57.0a1",
+      "update_url": "https://parentopticon.lan/browser-extension/updates.json"
+     }
   }
 
 }
