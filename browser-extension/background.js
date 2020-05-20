@@ -1,6 +1,19 @@
+HOST = "http://parentopticon.lan"
+WEBSITE = HOST + "/website"
+
+function denied(details) {
+  return {
+    redirectUrl: HOST + "/denied?url=" + encodeURIComponent(details.url)
+  }
+}
+
 function listener(details) {
   return new Promise((resolve, reject) => {
-    fetch("http://odroid.lan/website", {
+    if(details.url.startsWith(HOST)) {
+	  resolve();
+	  return;
+	}
+    fetch(WEBSITE, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -16,10 +29,10 @@ function listener(details) {
       if(response.status == 204) {
         resolve();
       }
-      resolve({cancel: true});
+      resolve(denied(details));
     }).catch(error => {
       console.error("Failed to talk to parentopticon", error);
-      resolve({cancel: true});
+      resolve(denied(details));
     });
   });
 }
