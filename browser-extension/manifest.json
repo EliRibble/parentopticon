@@ -1,0 +1,38 @@
+{
+
+  "manifest_version": 2,
+  "name": "Parentopticon",
+  "version": "1.0",
+  "homepage_url": "https://github.com/EliRibble/parentopticon",
+  "description": "Adds a red border to all webpages.",
+
+  "icons": {
+    "48": "icons/parentopticon-48.png",
+    "96": "icons/parentopticon-96.png"
+  },
+
+  "permissions": [
+    "contextMenus",
+    "dns",
+    "privacy",
+    "storage",
+    "tabs",
+    "unlimitedStorage",
+    "webNavigation",
+    "webRequest",
+    "webRequestBlocking",
+    "http://*/*",
+    "https://*/*"
+  ],
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "browser_specific_settings": {
+     "gecko": {
+	   "strict_min_version": "57.0a1"
+	 }
+  }
+
+}
