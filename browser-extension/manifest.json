@@ -2,7 +2,7 @@
 
   "manifest_version": 2,
   "name": "Parentopticon",
-  "version": "1.0",
+  "version": "1.1",
   "homepage_url": "https://github.com/EliRibble/parentopticon",
   "description": "This add-on sends all web request traffic to http://parentopticon.lan which should be a hosted instance of Parentopticon on your LAN. Parentopticon then has the ability to deny access to websites.",
 
@@ -11,22 +11,29 @@
     "96": "icons/parentopticon-96.png"
   },
 
-  "permissions": [
-    "webRequest",
-    "webRequestBlocking",
-    "http://*/*",
-    "https://*/*"
-  ],
-
   "background": {
     "scripts": ["background.js"]
   },
 
   "browser_specific_settings": {
      "gecko": {
+	  "id": "extension@parentopticon.lan",
       "strict_min_version": "57.0a1",
       "update_url": "https://parentopticon.lan/browser-extension/updates.json"
      }
-  }
+  },
+
+  "options_ui": {
+  	"browser_style": true,
+    "page": "options.html"
+  },
+
+  "permissions": [
+    "storage",
+    "webRequest",
+    "webRequestBlocking",
+    "http://*/*",
+    "https://*/*"
+  ]
 
 }
