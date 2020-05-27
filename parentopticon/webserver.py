@@ -4,7 +4,7 @@ import logging
 import typing
 
 from sanic import Sanic
-from sanic.response import empty, html, json, redirect
+from sanic.response import empty, html, json, redirect, text
 
 from parentopticon import db, jinja_env, log, version
 from parentopticon.db import queries, tables
@@ -154,6 +154,12 @@ async def config_program_process_post(request):
 		program = program,
 	)
 	return redirect("/config/program/{}".format(program))
+
+@app.route("/denied", methods=["GET"])
+async def denied_get(request):
+	"Tell a client its not allowed to go there."
+	url = request.args.get("url", "unknown")
+	return text("You've attempted to access '{}', which is denied.".format(url))
 
 @app.route("/program-by-process", methods=["GET"])
 async def config_programs_get(request):
