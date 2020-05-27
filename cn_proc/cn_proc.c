@@ -35,17 +35,24 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
+
+// Enable GNU extensions
+#define _GNU_SOURCE
+
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/capability.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include <linux/cn_proc.h>
 #include <linux/connector.h>
 #include <linux/netlink.h>
-#include <linux/cn_proc.h>
+
 
 #include <signal.h>
 #include <setjmp.h>
@@ -292,15 +299,32 @@ int main(int argc, char **argv)
 	struct cn_msg *cn_hdr;
 	enum proc_cn_mcast_op *mcop_msg;
 	size_t recv_len = 0;
+	cap_t my_capabilities;
+	cap_flag_value_t capability_value;
 
-	/* FIXME: actually test for CAP_NET_ADMIN */
-	if (getuid() != 0) {
-		fprintf(stderr,"Only users with CAP_NET_ADMIN can start/stop the fork connector\n");
-		return 0;
+	// Don't buffer stdout so that we can get immediate streams
+	setbuf(stdout, NULL);
+
+	// Test for CAP_NET_ADMIN before proceeding since we need it or we'll fail.
+	my_capabilities = cap_get_proc();
+	if (my_capabilities == NULL) {
+		fprintf(stderr, "Failed to get current capabilities.");
+		return 1;
+	}
+	if (cap_get_flag(my_capabilities, CAP_NET_ADMIN, CAP_EFFECTIVE, &capability_value)) {
+		perror("Failed to check for CAP_NET_ADMIN.");
+		return 1;
+	}
+	if (CAP_CLEAR == capability_value) {
+		fprintf(stderr, "No CAP_NET_ADMIN permitted. Please us 'sudo setcap cap_net_admin+eip <file>' to fix.");
+		return 1;
 	}
 
-	if (argc != 1)
-		return 0;
+
+	if (argc != 1) {
+		fprintf(stderr, "Too many arguments. This program takes no arguments.");
+		return 2;
+	}
 	/*
 	 * Create an endpoint for communication. Use the kernel user
 	 * interface device (PF_NETLINK) which is a datagram oriented
@@ -315,10 +339,6 @@ int main(int argc, char **argv)
 	my_nla.nl_family = AF_NETLINK;
 	my_nla.nl_groups = CN_IDX_PROC;
 	my_nla.nl_pid = getpid();
-
-	kern_nla.nl_family = AF_NETLINK;
-	kern_nla.nl_groups = CN_IDX_PROC;
-	kern_nla.nl_pid = 1;
 
 	err = bind(sk_nl, (struct sockaddr *)&my_nla, sizeof(my_nla));
 	if (err == -1) {
@@ -361,6 +381,11 @@ int main(int argc, char **argv)
 	}
 	fprintf(stderr,"Reading process events from proc connector.\n"
 		"Hit Ctrl-C to exit\n");
+
+	kern_nla.nl_family = AF_NETLINK;
+	kern_nla.nl_groups = CN_IDX_PROC;
+	kern_nla.nl_pid = 1;
+
 	for(memset(buff, 0, sizeof(buff)), from_nla_len = sizeof(from_nla);
 	  ; memset(buff, 0, sizeof(buff)), from_nla_len = sizeof(from_nla)) {
 		struct nlmsghdr *nlh = (struct nlmsghdr*)buff;
