@@ -17,7 +17,7 @@
 
   "browser_specific_settings": {
      "gecko": {
-	  "id": "extension@parentopticon.lan",
+	  "id": "{0e2f9bd0-a4db-4f28-b896-20e203646331}",
       "strict_min_version": "57.0a1",
       "update_url": "https://parentopticon.lan/browser-extension/updates.json"
      }
