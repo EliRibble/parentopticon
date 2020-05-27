@@ -40,10 +40,16 @@ async def config_get(request):
 		key=lambda s: s.start,
 		reverse=True,
 	)
+	website_visits = sorted(
+		tables.WebsiteVisit.list(app.db_connection),
+		key=lambda s: s.at,
+		reverse=True,
+	)
 	return _render("config/index.html",
 		programs=programs,
 		program_groups=program_groups,
 		program_sessions=program_sessions,
+		website_visits=website_visits,
 	)
 
 @app.route("/config/one-time-message", methods=["GET"])
@@ -172,6 +178,21 @@ async def snapshot_post(request):
 	username = request.json["username"]
 	pid_to_program = request.json["programs"]
 	queries.snapshot_store(app.db_connection, hostname, username, elapsed_seconds, pid_to_program)
+	return empty()
+
+@app.route("/website", methods=["POST"])
+async def website_post(request):
+	"Handle a client POSTing a website it visits"
+	tables.WebsiteVisit.insert(
+		app.db_connection,
+		at=datetime.datetime.now(),
+		hostname=request.json["hostname"],
+		incognito=request.json["incognito"],
+		url=request.json["url"],
+		username=request.json["username"],
+	)
+	if "github" in request.json["url"]:
+		return text("Parentopticon says no", status=499)
 	return empty()
 
 @app.route("/")

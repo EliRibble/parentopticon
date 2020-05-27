@@ -4,7 +4,7 @@ import logging
 from typing import Any, Iterable, List, Mapping, Optional, Tuple
 
 from parentopticon.db.connection import Connection
-from parentopticon.db.model import ColumnDate, ColumnDatetime, ColumnForeignKey, ColumnInteger, ColumnText, Model
+from parentopticon.db.model import ColumnBoolean, ColumnDate, ColumnDatetime, ColumnForeignKey, ColumnInteger, ColumnText, Model
 
 LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +84,17 @@ class ProgramSession(Model):
 		"Get the duration of the session, if possible."
 		if self.start and self.end:
 			return self.end - self.start
+
+class WebsiteVisit(Model):
+	"A single visit to a website."
+	COLUMNS = {
+		"id": ColumnInteger(autoincrement=True, primary_key=True),
+		"at": ColumnDatetime(null=False),
+		"hostname": ColumnText(null=False),
+		"incognito": ColumnBoolean(null=False),
+		"url": ColumnText(null=False),
+		"username": ColumnText(null=False),
+	}
 
 class WindowWeekDaySpanOverride(Model):
 	"An override for a single day in a window week."
@@ -196,6 +207,7 @@ def truncate_all(connection: Connection) -> None:
 	connection.cursor.execute(Program.truncate_statement())
 	connection.cursor.execute(ProgramProcess.truncate_statement())
 	connection.cursor.execute(ProgramSession.truncate_statement())
+	connection.cursor.execute(WebsiteVisit.truncate_statement())
 	connection.cursor.execute(WindowWeekDaySpan.truncate_statement())
 	connection.cursor.execute(WindowWeekDaySpanOverride.truncate_statement())
 	connection.commit()
@@ -208,6 +220,7 @@ def create_all(connection: Connection):
 	connection.cursor.execute(Program.create_statement())
 	connection.cursor.execute(ProgramProcess.create_statement())
 	connection.cursor.execute(ProgramSession.create_statement())
+	connection.cursor.execute(WebsiteVisit.create_statement())
 	connection.cursor.execute(WindowWeekDaySpan.create_statement())
 	connection.cursor.execute(WindowWeekDaySpanOverride.create_statement())
 	connection.commit()

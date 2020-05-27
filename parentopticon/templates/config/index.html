@@ -62,4 +62,27 @@
 <p>None yet</p>
 {% endif %}
 
+<h2>Website Visits</h2>
+{% if website_visits %}
+	<table>
+		<tr>
+			<th>Username</th>
+			<th>Hostname</th>
+			<th>At</th>
+			<th>Incognito</th>
+			<th>URL</th>
+		</tr>
+		{% for website_visit in website_visits %}
+			<tr>
+				<td>{{ website_visit.username }}</td>
+				<td>{{ website_visit.hostname }}</td>
+				<td>{{ website_visit.at }}</td>
+				<td>{{ website_visit.incognito }}</td>
+				<td>{{ website_visit.url }}</td>
+			</tr>
+		{% endfor %}
+	</table>
+{% else %}
+<p>None yet</p>
+{% endif %}
 {% endblock %}

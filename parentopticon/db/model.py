@@ -51,6 +51,10 @@ class ColumnForeignKey(Column):
 			primary_key=False)
 
 
+class ColumnBoolean(Column):
+	"Represents a boolean column>"
+	TYPENAME = "bool"
+
 class ColumnDate(Column):
 	"Represents a single date column."
 	TYPENAME = "date"
