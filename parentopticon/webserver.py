@@ -177,7 +177,11 @@ async def program_group_get(request, program_group_id: int):
 	program_group = tables.ProgramGroup.get(app.db_connection, program_group_id)
 	if not program_group:
 		redirect("../..")
-	return _render("program-group.html", program_group=program_group)
+	user_to_usage = queries.user_to_usage(app.db_connection, program_group=program_group)
+	return _render("program-group.html",
+		program_group=program_group,
+		user_to_usage=user_to_usage,
+	)
 
 @app.route("/")
 async def root(request):

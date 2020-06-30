@@ -1,4 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Program Group {{ program_group.name }}</h1>
+<h2>Configuration</h2>
+<table>
+	<tr><td>ID</td><td>{{ program_group.id }}</td></tr>
+	<tr><td>Minutes Monday</td><td>{{ program_group.minutes_monday }}</td></tr>
+	<tr><td>Minutes Tuesday</td><td>{{ program_group.minutes_tuesday }}</td></tr>
+	<tr><td>Minutes Wednesday</td><td>{{ program_group.minutes_wednesday }}</td></tr>
+	<tr><td>Minutes Thursday</td><td>{{ program_group.minutes_thursday }}</td></tr>
+	<tr><td>Minutes Friday</td><td>{{ program_group.minutes_friday }}</td></tr>
+	<tr><td>Minutes Saturday</td><td>{{ program_group.minutes_saturday }}</td></tr>
+	<tr><td>Minutes Sunday</td><td>{{ program_group.minutes_sunday }}</td></tr>
+	<tr><td>Minutes Weekly</td><td>{{ program_group.minutes_weekly }}</td></tr>
+	<tr><td>Minutes Monthly</td><td>{{ program_group.minutes_monthly }}</td></tr>
+</table>
+<h2>Current</h2>
+{% for username, usage in user_to_usage.items() %}
+<h3>{{ username }}</h3>
+	<table>
+		<tr><td>Minutes used today</td><td>{{ usage.minutes_used_today }}</td></tr>
+		<tr><td>Minutes remaining today</td><td>{{ usage.minutes_remaining_today }}</td></tr>
+	</table>
+{% endfor %}
 {% endblock %}
