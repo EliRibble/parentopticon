@@ -111,8 +111,12 @@ async def config_programs_post(request):
 async def config_program_group_get(request, program_group_id: int):
 	pg = tables.ProgramGroup.get(app.db_connection, program_group_id)
 	if not pg:
-		return redirect("/config/program-group")
-	return _render("config/program-group.html", program_group=pg)
+		return redirect("program-group")
+	user_to_usage = queries.user_to_usage(app.db_connection, program_group=pg)
+	return _render("config/program-group.html",
+		program_group=pg,
+		user_to_usage=user_to_usage,
+	)
 
 @app.route("/config/program-group", methods=["POST"])
 async def config_program_groups_post(request):
@@ -172,8 +176,16 @@ async def config_programs_get(request):
 async def program_group_get(request, program_group_id: int):
 	program_group = tables.ProgramGroup.get(app.db_connection, program_group_id)
 	if not program_group:
-		redirect("/")
-	return _render("program-group.html")
+		redirect("../..")
+	return _render("program-group.html", program_group=program_group)
+
+@app.route("/")
+async def root(request):
+	user_to_status = queries.user_to_status(app.db_connection)
+	return _render("index.html",
+		user_to_status=user_to_status,
+	)
+
 
 @app.route("/snapshot", methods=["POST"])
 async def snapshot_post(request):
@@ -200,14 +212,6 @@ async def website_post(request):
 	if "github" in request.json["url"]:
 		return text("Parentopticon says no", status=499)
 	return empty()
-
-@app.route("/")
-async def root(request):
-	user_to_status = queries.user_to_status(app.db_connection)
-	return _render("index.html",
-		user_to_status=user_to_status,
-	)
-
 
 @app.route("/window", methods=["POST"])
 async def window_post(request):

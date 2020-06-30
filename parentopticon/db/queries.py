@@ -43,7 +43,7 @@ def actions_for_username_messages(connection: Connection, hostname: str, usernam
 def actions_for_username_kills(connection: Connection, hostname: str, username: str) -> Iterable[Action]:
 	program_groups = list(ProgramGroup.list(connection))
 	programs = list(Program.list(connection))
-	statuses = _user_to_status_for(connection, username, program_groups, programs)
+	statuses = _user_to_status_for_program_groups(connection, username, program_groups, programs)
 	pids = set()
 	for status in statuses.values():
 		if status.minutes_remaining_today < 0:
@@ -199,12 +199,20 @@ def user_to_status(connection: Connection) -> Mapping[str, Mapping[str, Status]]
 	results = {}
 	program_groups = list(ProgramGroup.list(connection))
 	programs = list(Program.list(connection))
-	now = datetime.datetime.now()
 	for username in usernames(connection):
-		results[username] = _user_to_status_for(connection, username, program_groups, programs)
+		results[username] = _user_to_status_for_program_groups(connection, username, program_groups, programs)
 	return results
 
+def user_to_usage(connection: Connection, program_group: ProgramGroup) -> Mapping[str, Status]:
+	"Get a mapping of usernames to their current status."
+	programs = list(Program.list(connection))
+	return {
+		username: _user_to_status_for_program_group(connection, username, program_group, programs)
+		for username in usernames(connection)
+	}
+	
 def usernames(connection: Connection) -> Iterable[str]:
+	"Get all unique usernames in the system."
 	rows = connection.execute("SELECT DISTINCT username FROM ProgramSession").fetchall()
 	usernames = [row[0] for row in rows]
 	return usernames
@@ -232,35 +240,45 @@ def _today_start() -> datetime.datetime:
 		second = 0,
 	)
 
-def _user_to_status_for(connection: Connection,
+def _user_to_status_for_program_groups(connection: Connection,
 		username: str, 
 		program_groups: Iterable[ProgramGroup],
 		programs: Iterable[Program],
 		) -> Mapping[str, Status]:
 	"""Get the mapping of group names to status for a given user."""
-	results = {}
+	return {program_group.name: _user_to_status_for_program_group(
+		connection,
+		username,
+		program_group,
+		programs,
+	) for program_group in program_groups}
+
+def _user_to_status_for_program_group(connection: Connection,
+		username: str,
+		program_group: ProgramGroup,
+		programs: Iterable[Program],
+		) -> Status:
+	"Get the status for a particular user and program group."
 	now = datetime.datetime.now()
-	for program_group in program_groups:
-		programs_for_group = [program for program in programs if program.program_group == program_group.id]
-		program_ids = [program.id for program in programs_for_group]
-		program_sessions_today = program_session_list_since(connection, _today_start(), programs=program_ids)
-		minutes_used_today = 0
-		minutes_allowed_today = _minutes_allowed_today(program_group)
-		pids = set()
-		for program_session in program_sessions_today:
-			if program_session.username != username:
-				continue
-			end = program_session.end or now
-			elapsed = (end - program_session.start)
-			minutes_used_today += elapsed.total_seconds() / 60
-			if program_session.end is None:
-				pids.add(program_session.pids)
-		minutes_used_today = round(minutes_used_today, 1)
-		results[program_group.name] = Status(
-			group = program_group.id,
-			minutes_used_today = minutes_used_today,
-			minutes_remaining_today = minutes_allowed_today - minutes_used_today,
-			pids = sorted(list(pids)),
-		)
-	return results
+	programs_for_group = [program for program in programs if program.program_group == program_group.id]
+	program_ids = [program.id for program in programs_for_group]
+	program_sessions_today = program_session_list_since(connection, _today_start(), programs=program_ids)
+	minutes_used_today = 0
+	minutes_allowed_today = _minutes_allowed_today(program_group)
+	pids = set()
+	for program_session in program_sessions_today:
+		if program_session.username != username:
+			continue
+		end = program_session.end or now
+		elapsed = (end - program_session.start)
+		minutes_used_today += elapsed.total_seconds() / 60
+		if program_session.end is None:
+			pids.add(program_session.pids)
+	minutes_used_today = round(minutes_used_today, 1)
+	return Status(
+		group = program_group.id,
+		minutes_used_today = minutes_used_today,
+		minutes_remaining_today = minutes_allowed_today - minutes_used_today,
+		pids = sorted(list(pids)),
+	)
 
