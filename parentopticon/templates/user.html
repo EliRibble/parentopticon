@@ -3,12 +3,13 @@
 <h1>User {{ username }}</h1>
 <h2>Sessions</h2>
 <table>
-<tr><th>Program</th><th>Start</th><th>End</th></tr>
+<tr><th>Program</th><th>Start</th><th>End</th><th>Used</th></tr>
 {% for session in sessions %}
 <tr>
 	<td>{{ session.program_name }}</td>
 	<td>{{ session.start | nicetime }}</td>
 	<td>{{ session.end | nicetime }}</td>
+	<td>{{ (session.end - session.start) | timespan }}</td>
 </tr>
 {% endfor %}
 </table>
