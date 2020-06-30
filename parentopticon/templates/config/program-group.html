@@ -2,6 +2,7 @@
 {% block title %}Parentopticon - Program Group {{program_group.name}}</title>{% endblock %}
 {% block content %}
 <h1>Group '{{program_group.name}}'</h1>
+<h2>Update</h2>
 <form action="/program-group/{{program_group.id}}" method="PUT">
 	<label for="name">Name:</label>
 	<input type="text" name="name" value="{{program_group.name}}"/>
