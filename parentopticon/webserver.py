@@ -202,6 +202,28 @@ async def snapshot_post(request):
 	queries.snapshot_store(app.db_connection, hostname, username, elapsed_seconds, pid_to_program)
 	return empty()
 
+@app.route("/user/<username>", methods=["GET"])
+async def user(request, username: str):
+	programs = list(tables.Program.list(app.db_connection))
+	program_id_to_name = {program.id: program.name for program in programs}
+	sessions = queries.program_session_list_since(
+		connection=app.db_connection,
+		moment=queries.today_start(),
+		programs=None,
+		username=username,
+	)
+	display_sessions = [{
+		"end": session.end,
+		"program": session.program,
+		"program_name": program_id_to_name[session.program],
+		"start": session.start,
+		"username": session.username,
+	} for session in sessions]
+	return _render("user.html",
+		sessions=sorted(display_sessions, key=lambda s: s["start"]),
+		username=username,
+	)
+
 @app.route("/website", methods=["POST"])
 async def website_post(request):
 	"Handle a client POSTing a website it visits"

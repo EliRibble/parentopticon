@@ -16,7 +16,7 @@
 </table>
 <h2>Current</h2>
 {% for username, usage in user_to_usage.items() %}
-<h3>{{ username }}</h3>
+<h3><a href="user/{{ username }}">{{ username }}</a></h3>
 	<table>
 		<tr><td>Minutes used today</td><td>{{ usage.minutes_used_today }}</td></tr>
 		<tr><td>Minutes remaining today</td><td>{{ usage.minutes_remaining_today }}</td></tr>

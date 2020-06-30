@@ -153,14 +153,18 @@ def program_session_list_by_program(connection: Connection, program_id: int) -> 
 def program_session_list_since(
 		connection: Connection,
 		moment: datetime.datetime,
-		programs: Optional[List[int]]) -> Iterable[ProgramSession]:
+		programs: Optional[List[int]],
+		username: Optional[str] = None) -> Iterable[ProgramSession]:
 	"""Get all program sessions that started after a moment."""
 	if programs is None:
 		where = "start > ?"
-		bindings = (moment,)
+		bindings = [moment,]
 	else:
 		where = "start > ? AND program IN ({})".format(",".join(["?"]*len(programs)))
 		bindings = [moment] + programs
+	if username is not None:
+		where += " AND username = ?"
+		bindings.append(username)
 	return ProgramSession.list_where(
 		connection,
 		where=where,
@@ -183,6 +187,15 @@ def snapshot_store(
 		program_session_create_or_add(connection, hostname, username, elapsed_seconds, program, pids)
 	program_session_close_except(connection, hostname, set(program_to_pids.keys()))
 	
+
+def today_start() -> datetime.datetime:
+	"Get the starting moment for today."
+	now = datetime.datetime.now()
+	return now.replace(
+		hour = 0,
+		minute = 0,
+		second = 0,
+	)
 
 Status = collections.namedtuple("Status", (
 	"group",
@@ -231,15 +244,6 @@ def _minutes_allowed_today(program_group: ProgramGroup) -> int:
 	][today - 1]
 	return getattr(program_group, prop)
 
-def _today_start() -> datetime.datetime:
-	"Get the starting moment for today."
-	now = datetime.datetime.now()
-	return now.replace(
-		hour = 0,
-		minute = 0,
-		second = 0,
-	)
-
 def _user_to_status_for_program_groups(connection: Connection,
 		username: str, 
 		program_groups: Iterable[ProgramGroup],
@@ -262,7 +266,7 @@ def _user_to_status_for_program_group(connection: Connection,
 	now = datetime.datetime.now()
 	programs_for_group = [program for program in programs if program.program_group == program_group.id]
 	program_ids = [program.id for program in programs_for_group]
-	program_sessions_today = program_session_list_since(connection, _today_start(), programs=program_ids)
+	program_sessions_today = program_session_list_since(connection, today_start(), programs=program_ids)
 	minutes_used_today = 0
 	minutes_allowed_today = _minutes_allowed_today(program_group)
 	pids = set()
