@@ -6,7 +6,7 @@
 <h1>Parentopticon Main Page</h1>
 
 {% for user, groups_to_status in user_to_status.items() %}
-	<h2>{{ user }}</h2>
+	<h2><a href="user/{{ user }}">{{ user }}</a></h2>
 	<table>
 		<tr>
 			<th>Program Group</th>
