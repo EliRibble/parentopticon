@@ -33,13 +33,13 @@ def _timespan(t: datetime.timedelta) -> str:
 	elif s < 1000:
 		return "few minutes"
 	elif s < (60 * 60 * 100):
-		return "{} minutes".format(s / 60)
+		return "{} minutes".format(round(s / 60, 2))
 	elif s < (60 * 60 * 30):
-		return "{} hours".format(s / (60 * 60))
+		return "{} hours".format(round(s / (60 * 60), 2))
 	elif s < (60 * 60 * 24 * 400):
-		return "{} days".format(s / (60 * 60 * 24))
+		return "{} days".format(round(s / (60 * 60 * 24), 2))
 	else:
-		return "{} years".format(s / (60 * 60 * 24 * 365))
+		return "{} years".format(round(s / (60 * 60 * 24 * 365), 2))
 
 
 class JinjaEnvironmentSanic(jinja2.Environment):
