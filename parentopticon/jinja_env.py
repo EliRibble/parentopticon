@@ -15,8 +15,6 @@ def _nicetime(t: datetime.datetime) -> str:
 	now = datetime.datetime.now()
 	today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 	diff = now - t
-	print(today.isoformat())
-	print(t.replace(hour=0, minute=0, second=0, microsecond=0).isoformat())
 	if t.replace(hour=0, minute=0, second=0, microsecond=0) == today:
 		return t.strftime("%H:%M")
 	elif diff.days < 7:
