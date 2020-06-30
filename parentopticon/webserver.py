@@ -72,13 +72,13 @@ async def config_one_time_message_post(request):
 		sent = None,
 		username = username,
 	)
-	return redirect("/config/one-time-message")
+	return redirect("one-time-message")
 
 @app.route("/config/program/<program_id:int>", methods=["GET"])
 async def config_program_get(request, program_id: int):
 	program = tables.Program.get(app.db_connection, program_id)
 	if not program:
-		return redirect("/config/program")
+		return redirect("program")
 	program_groups = list(tables.ProgramGroup.list(app.db_connection))
 	program_processes = list(tables.ProgramProcess.list(app.db_connection, program=program_id))
 	return _render("config/program.html",
@@ -104,7 +104,7 @@ async def config_programs_post(request):
 		name = name,
 		program_group = program_group,
 	)
-	return redirect("/config/program/{}".format(program_id))
+	return redirect("program/{}".format(program_id))
 
 
 @app.route("/config/program-group/<program_group_id:int>", methods=["GET"])
@@ -138,7 +138,7 @@ async def config_program_groups_post(request):
 		minutes_weekly = minutes_weekly,
 		minutes_monthly = minutes_monthly,
 	)
-	return redirect("/config/program-group/{}".format(program_group_id))
+	return redirect("program-group/{}".format(program_group_id))
 
 
 @app.route("/config/program-group", methods=["GET"])
@@ -153,7 +153,7 @@ async def config_program_process_post(request):
 		name = name,
 		program = program,
 	)
-	return redirect("/config/program/{}".format(program))
+	return redirect("program/{}".format(program))
 
 @app.route("/denied", methods=["GET"])
 async def denied_get(request):
@@ -229,7 +229,7 @@ async def window_post(request):
 			start = int(start_str)
 			end = int(end_str)
 			app.db_connection.window_week_day_span_create(index, end, start, window_id)
-	return redirect("/window/{}".format(window_id))
+	return redirect("window/{}".format(window_id))
 
 @app.route("/window/<window_id:int>", methods=["GET"])
 async def window_get(request, window_id: int):

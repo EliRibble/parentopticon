@@ -2,7 +2,7 @@
 {% block title %}Parentopticon - Program {{ program.name }}{% endblock %}
 {% block content %}
 <h1>Program '{{ program.name }}'</h1>
-<form action="/config/program/{{ program.id }}" method="PUT">
+<form action="program/{{ program.id }}" method="PUT">
 	<label for="name">Name:</label>
 	<input type="text" name="name" value="{{ program.name }}"/>
 	<label for="program_group" name="program_group"/>
@@ -26,7 +26,7 @@
 {% else %}
 <p>None yet</p>
 {% endif %}
-<form action="/config/program-process" method="POST">
+<form action="program-process" method="POST">
 	<label for="name">Name:</label>
 	<input type="text" name="name"/>
 	<input type="hidden" name="program" value="{{ program.id }}"/>

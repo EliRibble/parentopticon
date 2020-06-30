@@ -4,21 +4,21 @@
 <h1>Parentopticon Config Page</h1>
 
 <p>Now: {{ now }}</p>
-<a href="/config/one-time-message">Send one-time message</a>
+<a href="./one-time-message">Send one-time message</a>
 
 <h2>Program Groups</h2>
 {% if program_groups %}
 <table>
 	<tr><th>Name</th></tr>
 	{% for pg in program_groups %}
-		<tr><td><a href="/config/program-group/{{ pg.id }}">{{ pg.name }}</a></td></tr>
+		<tr><td><a href="./program-group/{{ pg.id }}">{{ pg.name }}</a></td></tr>
 	{% endfor %}
 </table>
 {% else %}
 <p>None yet.</p>
 {% endif %}
 
-<a href="/config/program-group">Make more</a>
+<a href="./program-group">Make more</a>
 
 <h2>Programs</h2>
 {% if programs %}
@@ -27,14 +27,14 @@
 		{% for program in programs %}
 			<tr>
 				<td>{{ program.id }}</td>
-				<td><a href="/config/program/{{ program.id }}">{{ program.name }}</td>
+				<td><a href="./program/{{ program.id }}">{{ program.name }}</td>
 			</tr>
 		{% endfor %}
 	</table>
 {% else %}
 	<p>None yet.</p>
 {% endif %}
-<a href="/config/program">Make more</a>
+<a href="./program">Make more</a>
 
 <h2>Program Sessions</h2>
 {% if program_sessions %}

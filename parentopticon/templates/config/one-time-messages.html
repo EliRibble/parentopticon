@@ -19,7 +19,7 @@
 	<p>None yet</p>
 {% endif %}
 
-<form method="POST" action="/config/one-time-message">
+<form method="POST" action="one-time-message">
 	<label for="username">Username:</label>
 	<select name="username" {% if not usernames %}disabled{% endif %}>
 		{% for username in usernames %}
