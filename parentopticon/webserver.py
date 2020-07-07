@@ -111,12 +111,36 @@ async def config_programs_post(request):
 async def config_program_group_get(request, program_group_id: int):
 	pg = tables.ProgramGroup.get(app.db_connection, program_group_id)
 	if not pg:
-		return redirect("program-group")
+		return redirect("..")
 	user_to_usage = queries.user_to_usage(app.db_connection, program_group=pg)
 	return _render("config/program-group.html",
 		program_group=pg,
 		user_to_usage=user_to_usage,
 	)
+@app.route("/config/program-group/<program_group_id:int>", methods=["POST"])
+async def config_program_group_put(request, program_group_id: int):
+	values = {
+		"name": request.form["name"][0],
+		"minutes_monday": request.form["minutes_monday"][0],
+		"minutes_tuesday": request.form["minutes_tuesday"][0],
+		"minutes_wednesday": request.form["minutes_wednesday"][0],
+		"minutes_thursday": request.form["minutes_thursday"][0],
+		"minutes_friday": request.form["minutes_friday"][0],
+		"minutes_saturday": request.form["minutes_saturday"][0],
+		"minutes_sunday": request.form["minutes_sunday"][0],
+		"minutes_weekly": request.form["minutes_weekly"][0],
+		"minutes_monthly": request.form["minutes_monthly"][0],
+	}
+	LOGGER.info("Updating program-group %d to %s", program_group_id, values)
+	pg = tables.ProgramGroup.get(app.db_connection, program_group_id)
+	if not pg:
+		return redirect("..")
+	tables.ProgramGroup.update(
+		app.db_connection,
+		program_group_id,
+		**values,
+	)
+	return redirect("../program-group/{}".format(program_group_id))
 
 @app.route("/config/program-group", methods=["POST"])
 async def config_program_groups_post(request):

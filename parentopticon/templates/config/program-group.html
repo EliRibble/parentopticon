@@ -3,7 +3,7 @@
 {% block content %}
 <h1>Group '{{program_group.name}}'</h1>
 <h2>Update</h2>
-<form action="/program-group/{{program_group.id}}" method="PUT">
+<form action="./{{program_group.id}}" method="POST">
 	<label for="name">Name:</label>
 	<input type="text" name="name" value="{{program_group.name}}"/>
 	<label for="minutes_monday">Minutes Monday:</label>
