@@ -313,6 +313,10 @@ async def on_server_start(app, loop) -> None:
 def root():
 	return flask.render_template("root.html")
 
+@flask_app.route("/login", methods=["GET"])
+def login_get():
+	return flask.render_template("login.html")
+
 class User():
 	"A user. Duh."
 	def __init__(self) -> None:
