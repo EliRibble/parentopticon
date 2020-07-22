@@ -16,6 +16,7 @@ setuptools.setup(
 	install_requires = [
 		"arrow==0.15.5",
 		"flask==1.1.2",
+		"flask-login==0.5.0",
 		"Jinja2==2.11.1",
 		"psutil==5.6.6",
 		"requests==2.23.0",

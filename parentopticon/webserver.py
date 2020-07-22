@@ -4,8 +4,9 @@ import logging
 import typing
 
 from flask import Flask
+from flask_login import LoginManager
 
-flask_app = Flask("parentopticon")
+import toml
 
 from sanic import Sanic
 from sanic.response import empty, html, json, redirect, text
@@ -15,6 +16,9 @@ from parentopticon.db import queries, tables
 from parentopticon.db.connection import Connection
 
 LOGGER = logging.getLogger(__name__)
+
+flask_app = Flask("parentopticon")
+
 app = Sanic()
 app.static("/static", "./static")
 app.static("/favicon.ico", "static/img/parentopticon.ico")
@@ -310,6 +314,7 @@ def hello_world():
 
 def run() -> None:
 	parser = argparse.ArgumentParser()
+	parser.add_argument("-c", "--config", default="/etc/parentopticon.toml", help="The config file to load.")
 	parser.add_argument("-H", "--host", default="0.0.0.0", help="The port/host to bind to.")
 	parser.add_argument("-p", "--port", type=int, default=13598, help="The port to run on.")
 	parser.add_argument("--verbose", action="store_true", help="Use verbose logging.")
@@ -317,7 +322,16 @@ def run() -> None:
 
 	log.setup(level=logging.DEBUG if args.verbose else logging.INFO)
 	try:
+		configuration = toml.load(args.config)
+	except FileNotFoundError:
+		configuration = {
+			"secret_key": "this-is-not-secret-don't-use-this",
+		}
+	try:
 		LOGGER.info("Webserver starting.")
+		login_manager = LoginManager()
+		login_manager.init_app(flask_app)
+		flask_app.secret_key = configuration["secret_key"]
 		flask_app.run(host=args.host, port=args.port)
 	except KeyboardInterrupt:
 		LOGGER.info("shutting down due to SIGINT")
