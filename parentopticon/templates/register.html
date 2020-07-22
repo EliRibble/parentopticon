@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<p>Not yet a user? <a href="/register">Register here.</a></p>
+<p>Already a user? <a href="/login">Login here.</a></p>
 <div class="row">
-	<form class="col s12" action="/login" method="POST">
+	<form class="col s12" action="/register" method="POST">
 		<div class="row">
+			<div class="input-field col s6">
+				<i class="material-icons prefix">person</i>
+				<input placeholder="Fulano Mangano" id="name" name="name" type="text">
+				<label for="name">Name</label>
+			</div>
 			<div class="input-field col s6">
 				<i class="material-icons prefix">account_circle</i>
 				<input placeholder="me@somewhere.com" id="username" name="username" type="text">

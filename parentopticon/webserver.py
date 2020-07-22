@@ -338,6 +338,10 @@ def logout():
 	flask_login.logout_user()
 	return flask.redirect("/login")
 
+@flask_app.route("/register", methods=["GET"])
+def register():
+	return flask.render_template("register.html")
+
 class User():
 	"A user. Duh."
 	def __init__(self) -> None:
