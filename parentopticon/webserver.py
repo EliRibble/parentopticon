@@ -3,7 +3,7 @@ import datetime
 import logging
 import typing
 
-from flask import Flask
+import flask
 import flask_login
 
 import toml
@@ -17,7 +17,7 @@ from parentopticon.db.connection import Connection
 
 LOGGER = logging.getLogger(__name__)
 
-flask_app = Flask("parentopticon")
+flask_app = flask.Flask("parentopticon")
 login_manager = flask_login.LoginManager()
 
 app = Sanic()
@@ -310,12 +310,8 @@ async def on_server_start(app, loop) -> None:
 	LOGGER.info("Server start hook complete")
 
 @flask_app.route("/")
-def hello_world():
-	LOGGER.info("Current user: %s", flask_login.current_user)
-	if flask_login.current_user.is_anonymous:
-		return "Hello new user from parentopticon"
-	else:
-		return "Hey user {} from parentopticon".format(flask_login.current_user.get_id())
+def root():
+	return flask.render_template("root.html")
 
 class User():
 	"A user. Duh."
