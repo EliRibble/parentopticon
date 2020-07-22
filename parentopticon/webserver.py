@@ -311,6 +311,7 @@ async def on_server_start(app, loop) -> None:
 
 @flask_app.route("/")
 def root():
+	LOGGER.info("Current user: %s", flask_login.current_user)
 	return flask.render_template("root.html")
 
 @flask_app.route("/login", methods=["GET"])
@@ -324,6 +325,7 @@ def login_post():
 	password = flask.request.form["password"]
 	if username == "eliribble" and password == "secret":
 		if flask_login.login_user(User()):
+			LOGGER.info("Logged in user %s.", username)
 			return flask.redirect("/")
 		flask.flash("Login failed. Sorry :(")
 		return flask.redirect("/login")
@@ -336,12 +338,15 @@ class User():
 		self.is_active = True
 		self.is_authenticated = True
 		self.is_anonymous = False
+		self.name = "Eli"
 
-	def get_id() -> str:
+	def get_id(self) -> str:
 		return "1"
 		
 @login_manager.user_loader
 def load_user(user_id: str) -> User:
+	if user_id == "1":
+		return User()
 	return None
 
 def run() -> None:
