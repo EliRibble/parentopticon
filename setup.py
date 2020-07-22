@@ -15,6 +15,7 @@ setuptools.setup(
 	packages=setuptools.find_packages(),
 	install_requires = [
 		"arrow==0.15.5",
+		"chryso==2.1",
 		"flask==1.1.2",
 		"flask-login==0.5.0",
 		"Jinja2==2.11.1",
