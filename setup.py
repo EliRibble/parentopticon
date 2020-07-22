@@ -15,10 +15,10 @@ setuptools.setup(
 	packages=setuptools.find_packages(),
 	install_requires = [
 		"arrow==0.15.5",
+		"flask==1.1.2",
 		"Jinja2==2.11.1",
 		"psutil==5.6.6",
 		"requests==2.23.0",
-		"sanic==19.12.2",
 		"toml==0.10.0",
 	],
 	classifiers=[
