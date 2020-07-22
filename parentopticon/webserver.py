@@ -317,6 +317,19 @@ def root():
 def login_get():
 	return flask.render_template("login.html")
 
+@flask_app.route("/login", methods=["POST"])
+def login_post():
+	LOGGER.info("Handling login POST for %s", flask.request.form.get("username"))
+	username = flask.request.form["username"]
+	password = flask.request.form["password"]
+	if username == "eliribble" and password == "secret":
+		if flask_login.login_user(User()):
+			return flask.redirect("/")
+		flask.flash("Login failed. Sorry :(")
+		return flask.redirect("/login")
+	flask.flash("Incorrect username/password")
+	return flask.redirect("/login")
+
 class User():
 	"A user. Duh."
 	def __init__(self) -> None:
