@@ -332,6 +332,12 @@ def login_post():
 	flask.flash("Incorrect username/password")
 	return flask.redirect("/login")
 
+@flask_app.route("/logout", methods=["GET", "POST"])
+def logout():
+	LOGGER.info("Logging out %s", flask_login.current_user.get_id())
+	flask_login.logout_user()
+	return flask.redirect("/login")
+
 class User():
 	"A user. Duh."
 	def __init__(self) -> None:
