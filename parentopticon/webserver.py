@@ -3,6 +3,10 @@ import datetime
 import logging
 import typing
 
+from flask import Flask
+
+flask_app = Flask("parentopticon")
+
 from sanic import Sanic
 from sanic.response import empty, html, json, redirect, text
 
@@ -300,6 +304,10 @@ async def on_server_start(app, loop) -> None:
 	app.jinja_env = jinja_env.create()
 	LOGGER.info("Server start hook complete")
 
+@flask_app.route("/")
+def hello_world():
+	return "Hello from parentopticon"
+
 def run() -> None:
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-H", "--host", default="0.0.0.0", help="The port/host to bind to.")
@@ -310,7 +318,7 @@ def run() -> None:
 	log.setup(level=logging.DEBUG if args.verbose else logging.INFO)
 	try:
 		LOGGER.info("Webserver starting.")
-		app.run(host=args.host, port=args.port)
+		flask_app.run(host=args.host, port=args.port)
 	except KeyboardInterrupt:
 		LOGGER.info("shutting down due to SIGINT")
 
