@@ -3,7 +3,6 @@ import datetime
 import logging
 from typing import Any, Iterable, List, Mapping, Optional, Tuple
 
-from parentopticon.db.connection import Connection
 from parentopticon.db.model import ColumnBoolean, ColumnDate, ColumnDatetime, ColumnForeignKey, ColumnInteger, ColumnText, Model
 
 LOGGER = logging.getLogger(__name__)
@@ -200,6 +199,9 @@ class WindowWeek:
 	@property
 	def sunday(self) -> WindowWeekDay:
 		return self.days[6]
+
+class Connection():
+	pass
 
 def truncate_all(connection: Connection) -> None:
 	connection.cursor.execute(ProgramGroup.truncate_statement())

@@ -1,5 +1,11 @@
+import logging
 import sqlite3
 from typing import Any, Iterable, Optional, Tuple
+
+import chryso.connection
+from parentopticon.db import tables
+
+LOGGER = logging.getLogger(__name__)
 
 class Connection:
 	"Class that encapsulates all the interface to the DB."
@@ -26,3 +32,12 @@ class Connection:
 		self.connection.commit()
 		return self.cursor.lastrowid
 
+def create(uri: str):
+	"Create a connection to the database."
+	engine = chryso.connection.Engine(
+		uri = uri,
+		tables = [],
+	)
+	chryso.connection.store(engine)
+	LOGGER.info("DB engine connection established.\n\t%s", engine.execute("SELECT version()").fetchone())
+	return engine

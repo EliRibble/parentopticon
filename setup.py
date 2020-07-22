@@ -21,7 +21,6 @@ setuptools.setup(
 		"Jinja2==2.11.1",
 		"psutil==5.6.6",
 		"requests==2.23.0",
-		"sqlalchemy==1.3.18",
 		"toml==0.10.0",
 	],
 	classifiers=[

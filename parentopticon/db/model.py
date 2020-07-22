@@ -4,11 +4,12 @@ import logging
 import sqlite3
 from typing import Any, Iterable, List, Mapping, Optional, Tuple
 
-from parentopticon.db.connection import Connection
-
 LOGGER = logging.getLogger(__name__)
 
 StatementAndBinding = Tuple[str, Iterable[Any]]
+
+class Connection:
+	pass
 
 class Column:
 	"Represents a single column on a table."
