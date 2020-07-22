@@ -4,7 +4,7 @@ import logging
 import typing
 
 from flask import Flask
-from flask_login import LoginManager
+import flask_login
 
 import toml
 
@@ -18,6 +18,7 @@ from parentopticon.db.connection import Connection
 LOGGER = logging.getLogger(__name__)
 
 flask_app = Flask("parentopticon")
+login_manager = flask_login.LoginManager()
 
 app = Sanic()
 app.static("/static", "./static")
@@ -310,7 +311,25 @@ async def on_server_start(app, loop) -> None:
 
 @flask_app.route("/")
 def hello_world():
-	return "Hello from parentopticon"
+	LOGGER.info("Current user: %s", flask_login.current_user)
+	if flask_login.current_user.is_anonymous:
+		return "Hello new user from parentopticon"
+	else:
+		return "Hey user {} from parentopticon".format(flask_login.current_user.get_id())
+
+class User():
+	"A user. Duh."
+	def __init__(self) -> None:
+		self.is_active = True
+		self.is_authenticated = True
+		self.is_anonymous = False
+
+	def get_id() -> str:
+		return "1"
+		
+@login_manager.user_loader
+def load_user(user_id: str) -> User:
+	return None
 
 def run() -> None:
 	parser = argparse.ArgumentParser()
@@ -329,7 +348,6 @@ def run() -> None:
 		}
 	try:
 		LOGGER.info("Webserver starting.")
-		login_manager = LoginManager()
 		login_manager.init_app(flask_app)
 		flask_app.secret_key = configuration["secret_key"]
 		flask_app.run(host=args.host, port=args.port)
