@@ -18,7 +18,7 @@ setuptools.setup(
 		"chryso==2.1",
 		"flask==1.1.2",
 		"flask-login==0.5.0",
-		"Jinja2==2.11.1",
+		"Jinja2==2.11.3",
 		"psutil==5.6.6",
 		"requests==2.23.0",
 		"toml==0.10.0",
